@@ -1,0 +1,8 @@
+.vscode/
+.tscache/
+node_modules/
+bin/
+
+package-lock.json
+
+core/src/shader/ShaderLib.ts
