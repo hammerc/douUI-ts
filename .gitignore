@@ -5,4 +5,4 @@ bin/
 
 package-lock.json
 
-core/src/shader/ShaderLib.ts
+!examples/bin
