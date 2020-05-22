@@ -61,6 +61,58 @@
   ],
   /* 注: 如果有继承关系的, 父类必须排在子类前面 */
   "files": [
-    "src/core/UIComponent.ts",
+    "src/asset/IAssetAdapter.ts",
+    "src/asset/DefaultAssetAdapter.ts",
+
+    "src/collections/ICollection.ts",
+    "src/collections/ArrayCollection.ts",
+
+    "src/core/Validator.ts",
+    "src/core/IUIComponent.ts",
+    "src/core/UIComponentImpl.ts",
+
+    "src/components/supportClasses/ListBase.ts",
+    "src/components/supportClasses/Range.ts",
+    "src/components/supportClasses/ScrollBarBase.ts",
+    "src/components/supportClasses/SliderBase.ts",
+    "src/components/supportClasses/TouchScroll.ts",
+
+    "src/components/Component.ts",
+    "src/components/BitmapLabel.ts",
+    "src/components/Button.ts",
+    "src/components/CheckBox.ts",
+    "src/components/DataGroup.ts",
+    "src/components/EditableText.ts",
+    "src/components/Group.ts",
+    "src/components/HScrollBar.ts",
+    "src/components/HSlider.ts",
+    "src/components/Image.ts",
+    "src/components/ItemRenderer.ts",
+    "src/components/Label.ts",
+    "src/components/List.ts",
+    "src/components/ProgressBar.ts",
+    "src/components/RadioButton.ts",
+    "src/components/RadioButtonGroup.ts",
+    "src/components/Rect.ts",
+    "src/components/Scroller.ts",
+    "src/components/TabBar.ts",
+    "src/components/TextInput.ts",
+    "src/components/ToggleButton.ts",
+    "src/components/Tree.ts",
+    "src/components/UILayer.ts",
+    "src/components/ViewStack.ts",
+    "src/components/VScrollBar.ts",
+    "src/components/VSlider.ts",
+
+    "src/enum/CollectionEventKind.ts",
+    "src/enum/UIKeys.ts",
+
+    "src/event/CollectionEvent.ts",
+    "src/event/ScrollerThrowEvent.ts",
+    "src/event/ItemTapEvent.ts",
+    "src/event/UIEvent.ts",
+
+    "src/utils/ComponentUtil.ts",
+    "src/utils/MatrixUtil.ts",
   ]
 }
