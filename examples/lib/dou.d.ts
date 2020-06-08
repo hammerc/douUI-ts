@@ -278,6 +278,18 @@ declare namespace dou {
 }
 declare namespace dou {
     /**
+     * 实际地址控制器
+     * @author wizardc
+     */
+    interface IPathController {
+        /**
+         * 获取实际的 URL 地址
+         */
+        getVirtualUrl(url: string): string;
+    }
+}
+declare namespace dou {
+    /**
      * 加载管理器
      * @author wizardc
      */
@@ -288,6 +300,7 @@ declare namespace dou {
         private _resourceRoot;
         private _analyzerMap;
         private _extensionMap;
+        private _pathController;
         private _priorityList;
         private _priorityMap;
         private _keyMap;
@@ -314,6 +327,10 @@ declare namespace dou {
          * 注册后缀名和其对应的默认类型
          */
         registerExtension(extension: string, type: string): void;
+        /**
+         * 注册实际地址控制器
+         */
+        registerPathController(controller: IPathController): void;
         /**
          * 加载指定项
          */
@@ -865,9 +882,21 @@ declare namespace dou {
     /**
      * 对象池配置
      */
-    function deployPool(targetClass: {
-        new (): any;
+    function deployPool(creator: Creator<any> & {
+        __pool?: ObjectPool<any>;
     }, maxCount: number): void;
+    /**
+     * 获取对象池中的对象数量
+     */
+    function getPoolSize(creator: Creator<any> & {
+        __pool?: ObjectPool<any>;
+    }): number;
+    /**
+     * 清空对象池
+     */
+    function clearPool(creator: Creator<any> & {
+        __pool?: ObjectPool<any>;
+    }): void;
 }
 declare namespace dou {
     /**
@@ -1015,4 +1044,24 @@ declare namespace dou {
          */
         function isAllWhitespace(str: string): boolean;
     }
+}
+declare namespace dou {
+    /**
+     * 调用父类 getter 方法, 类似其他语言的 xxx = super.getter; 这样的写法
+     * @param currentClass 当前的类
+     * @param thisObj 当前的对象
+     * @param type 要调用的属性名
+     * @returns 返回的值
+     */
+    function superGetter(currentClass: any, thisObj: any, type: string): any;
+}
+declare namespace dou {
+    /**
+     * 调用父类 setter 方法, 类似其他语言的 super.setter = xxx; 这样的写法
+     * @param currentClass 当前的类
+     * @param thisObj 当前的对象
+     * @param type 要调用的属性名
+     * @param values 传递的参数
+     */
+    function superSetter(currentClass: any, thisObj: any, type: string, ...values: any[]): any;
 }
