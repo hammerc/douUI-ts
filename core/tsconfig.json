@@ -70,6 +70,8 @@
     "src/core/Validator.ts",
     "src/core/IUIComponent.ts",
     "src/core/UIComponentImpl.ts",
+    "src/core/IViewport.ts",
+    "src/core/IItemRenderer.ts",
 
     "src/components/supportClasses/ListBase.ts",
     "src/components/supportClasses/Range.ts",
@@ -111,6 +113,18 @@
     "src/event/ScrollerThrowEvent.ts",
     "src/event/ItemTapEvent.ts",
     "src/event/UIEvent.ts",
+
+    "src/layouts/supportClasses/LayoutBase.ts",
+    "src/layouts/supportClasses/LinearLayoutBase.ts",
+    "src/layouts/BasicLayout.ts",
+    "src/layouts/HorizontalLayout.ts",
+    "src/layouts/VerticalLayout.ts",
+    "src/layouts/TileLayout.ts",
+
+    "src/skin/ISkin.ts",
+    "src/skin/Skin.ts",
+
+    "src/theme/Theme.ts",
 
     "src/utils/ComponentUtil.ts",
     "src/utils/MatrixUtil.ts",

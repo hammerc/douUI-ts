@@ -8,17 +8,17 @@ namespace douUI.core {
      */
     export class UIComponentImpl extends dou2d.DisplayObject implements IUIComponent {
         /**
-         * 
+         * 父类引用
          */
         public $super: any;
 
         /**
-         * 
+         * 属性集合
          */
         public $UIComponent: Object;
 
         /**
-         * 
+         * 是否包含在父容器的布局中
          */
         public $includeInLayout: boolean;
 
@@ -402,8 +402,9 @@ namespace douUI.core {
          */
         public set includeInLayout(value: boolean) {
             value = !!value;
-            if (this.$includeInLayout === value)
+            if (this.$includeInLayout === value) {
                 return;
+            }
             this.$includeInLayout = true;
             this.invalidateParentLayout();
             this.$includeInLayout = value;
@@ -441,7 +442,7 @@ namespace douUI.core {
         }
 
         /**
-         * 立即验证自身的尺寸。
+         * 立即验证自身的尺寸
          */
         private validateSizeNow(): void {
             this.validateSize(true);
@@ -449,7 +450,7 @@ namespace douUI.core {
         }
 
         /**
-         * 设置测量结果。
+         * 设置测量结果
          * @param width 测量宽度
          * @param height 测量高度
          */
@@ -460,8 +461,8 @@ namespace douUI.core {
         }
 
         /**
-         * 设置组件的宽高。此方法不同于直接设置width,height属性，
-         * 不会影响显式标记尺寸属性
+         * 设置组件的宽高
+         * * 此方法不同于直接设置 width, height 属性, 不会影响显式标记尺寸属性
          */
         private setActualSize(w: number, h: number): void {
             let change = false;
@@ -528,8 +529,9 @@ namespace douUI.core {
             let values = this.$UIComponent;
             if (!values[UIKeys.invalidatePropertiesFlag]) {
                 values[UIKeys.invalidatePropertiesFlag] = true;
-                if (this._stage)
+                if (this._stage) {
                     validator.invalidateProperties(this);
+                }
             }
         }
 
@@ -551,8 +553,9 @@ namespace douUI.core {
             let values = this.$UIComponent;
             if (!values[UIKeys.invalidateSizeFlag]) {
                 values[UIKeys.invalidateSizeFlag] = true;
-                if (this._stage)
+                if (this._stage) {
                     validator.invalidateSize(this);
+                }
             }
         }
 
@@ -584,7 +587,7 @@ namespace douUI.core {
         }
 
         /**
-         * 测量组件尺寸，返回尺寸是否发生变化
+         * 测量组件尺寸, 返回尺寸是否发生变化
          */
         private measureSizes(): boolean {
             let changed = false;
@@ -604,13 +607,12 @@ namespace douUI.core {
                     values[UIKeys.measuredHeight] = values[UIKeys.minHeight];
                 }
                 if (values[UIKeys.measuredHeight] > values[UIKeys.maxHeight]) {
-                    values[UIKeys.measuredHeight] = values[UIKeys.maxHeight]
+                    values[UIKeys.measuredHeight] = values[UIKeys.maxHeight];
                 }
             }
             let preferredW = this.getPreferredUWidth();
             let preferredH = this.getPreferredUHeight();
-            if (preferredW !== values[UIKeys.oldPreferWidth] ||
-                preferredH !== values[UIKeys.oldPreferHeight]) {
+            if (preferredW !== values[UIKeys.oldPreferWidth] || preferredH !== values[UIKeys.oldPreferHeight]) {
                 values[UIKeys.oldPreferWidth] = preferredW;
                 values[UIKeys.oldPreferHeight] = preferredH;
                 changed = true;
@@ -625,13 +627,14 @@ namespace douUI.core {
             let values = this.$UIComponent;
             if (!values[UIKeys.invalidateDisplayListFlag]) {
                 values[UIKeys.invalidateDisplayListFlag] = true;
-                if (this._stage)
+                if (this._stage) {
                     validator.invalidateDisplayList(this);
+                }
             }
         }
 
         /**
-         * 验证子项的位置和大小，并绘制其他可视内容
+         * 验证子项的位置和大小, 并绘制其他可视内容
          */
         public validateDisplayList(): void {
             let values = this.$UIComponent;
@@ -674,8 +677,9 @@ namespace douUI.core {
          * 立即应用组件及其子项的所有属性
          */
         public validateNow(): void {
-            if (this._stage)
+            if (this._stage) {
                 validator.validateClient(this);
+            }
         }
 
         /**
@@ -683,8 +687,9 @@ namespace douUI.core {
          */
         protected invalidateParentLayout(): void {
             let parent = this._parent;
-            if (!parent || !this.$includeInLayout || !("invalidateSize" in parent && "invalidateDisplayList" in parent))
+            if (!parent || !this.$includeInLayout || !("invalidateSize" in parent && "invalidateDisplayList" in parent)) {
                 return;
+            }
             (<IUIComponent><any>parent).invalidateSize();
             (<IUIComponent><any>parent).invalidateDisplayList();
         }
@@ -726,11 +731,7 @@ namespace douUI.core {
                 this.setActualSize(width, height);
                 return;
             }
-
-            let fitSize = MatrixUtil.fitBounds(layoutWidth, layoutHeight, matrix,
-                values[UIKeys.explicitWidth], values[UIKeys.explicitHeight],
-                this.getPreferredUWidth(), this.getPreferredUHeight(),
-                minWidth, minHeight, maxWidth, maxHeight);
+            let fitSize = MatrixUtil.fitBounds(layoutWidth, layoutHeight, matrix, values[UIKeys.explicitWidth], values[UIKeys.explicitHeight], this.getPreferredUWidth(), this.getPreferredUHeight(), minWidth, minHeight, maxWidth, maxHeight);
             if (!fitSize) {
                 fitSize = dou.recyclable(dou2d.Point);
                 fitSize.set(minWidth, minHeight);
@@ -758,9 +759,8 @@ namespace douUI.core {
         }
 
         /**
-         * 组件的布局尺寸,常用于父级的updateDisplayList()方法中
-         * 按照：布局尺寸>外部显式设置尺寸>测量尺寸 的优先级顺序返回尺寸,
-         * 注意此方法返回值已经包含scale和rotation。
+         * 组件的布局尺寸, 常用于父级的 updateDisplayList() 方法中
+         * * 按照: 布局尺寸 -> 外部显式设置尺寸 -> 测量尺寸 的优先级顺序返回尺寸, 注意此方法返回值已经包含 scale 和 rotation
          */
         public getLayoutBounds(bounds: dou2d.Rectangle): void {
             let values = this.$UIComponent;
@@ -789,20 +789,17 @@ namespace douUI.core {
 
         private getPreferredUWidth(): number {
             let values = this.$UIComponent;
-            return isNaN(values[UIKeys.explicitWidth]) ?
-                values[UIKeys.measuredWidth] : values[UIKeys.explicitWidth];
+            return isNaN(values[UIKeys.explicitWidth]) ? values[UIKeys.measuredWidth] : values[UIKeys.explicitWidth];
         }
 
         private getPreferredUHeight(): number {
             let values = this.$UIComponent;
-            return isNaN(values[UIKeys.explicitHeight]) ?
-                values[UIKeys.measuredHeight] : values[UIKeys.explicitHeight];
+            return isNaN(values[UIKeys.explicitHeight]) ? values[UIKeys.measuredHeight] : values[UIKeys.explicitHeight];
         }
 
         /**
-         * 获取组件的首选尺寸,常用于父级的measure()方法中
-         * 按照：外部显式设置尺寸>测量尺寸 的优先级顺序返回尺寸，
-         * 注意此方法返回值已经包含scale和rotation。
+         * 获取组件的首选尺寸, 常用于父级的 measure() 方法中
+         * 按照: 外部显式设置尺寸 -> 测量尺寸 的优先级顺序返回尺寸, 注意此方法返回值已经包含 scale 和 rotation
          */
         public getPreferredBounds(bounds: dou2d.Rectangle): void {
             let w = this.getPreferredUWidth();
