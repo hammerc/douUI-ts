@@ -5,7 +5,7 @@ namespace douUI {
 	 * * 视区是您希望显示的组件的区域的矩形子集, 而不是显示整个组件
      * @author wizardc
      */
-    export interface IViewport {
+    export interface IViewport extends sys.IUIComponent {
         /**
          * 视域的内容的宽度
          */

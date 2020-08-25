@@ -1,4 +1,4 @@
-namespace douUI.core {
+namespace douUI.sys {
     /**
      * 失效验证管理器
      * @author wizardc

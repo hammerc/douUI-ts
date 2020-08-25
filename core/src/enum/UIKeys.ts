@@ -1,4 +1,4 @@
-namespace douUI.core {
+namespace douUI.sys {
     /**
      * 组件属性类型
      * @author wizardc
@@ -34,5 +34,26 @@ namespace douUI.core {
         layoutWidthExplicitlySet,
         layoutHeightExplicitlySet,
         initialized
+    }
+
+    export const enum ComponentKeys {
+        hostComponentKey,
+        skinName,
+        explicitState,
+        enabled,
+        stateIsDirty,
+        skinNameExplicitlySet,
+        explicitTouchChildren,
+        explicitTouchEnabled,
+        skin
+    }
+
+    export const enum GroupKeys {
+        contentWidth,
+        contentHeight,
+        scrollH,
+        scrollV,
+        scrollEnabled,
+        touchThrough
     }
 }

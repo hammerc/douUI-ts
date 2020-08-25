@@ -146,10 +146,10 @@ declare namespace dou2d {
          */
         ty: number;
         constructor(a?: number, b?: number, c?: number, d?: number, tx?: number, ty?: number);
-        readonly scaleX: number;
-        readonly scaleY: number;
-        readonly skewX: number;
-        readonly skewY: number;
+        get scaleX(): number;
+        get scaleY(): number;
+        get skewX(): number;
+        get skewY(): number;
         private getDeterminant;
         set(a: number, b: number, c: number, d: number, tx: number, ty: number): Matrix;
         /**
@@ -259,8 +259,8 @@ declare namespace dou2d {
         x: number;
         y: number;
         constructor(x?: number, y?: number);
-        readonly sqrtLength: number;
-        readonly length: number;
+        get sqrtLength(): number;
+        get length(): number;
         set(x: number, y: number): this;
         /**
          * 将该向量加上一个向量或将两个向量相加的结果写入该向量
@@ -329,12 +329,18 @@ declare namespace dou2d {
         width: number;
         height: number;
         constructor(x?: number, y?: number, width?: number, height?: number);
-        top: number;
-        bottom: number;
-        left: number;
-        right: number;
-        topLeft: Point;
-        bottomRight: Point;
+        set top(value: number);
+        get top(): number;
+        set bottom(value: number);
+        get bottom(): number;
+        set left(value: number);
+        get left(): number;
+        set right(value: number);
+        get right(): number;
+        set topLeft(value: Point);
+        get topLeft(): Point;
+        set bottomRight(value: Point);
+        get bottomRight(): Point;
         set(x: number, y: number, width: number, height: number): this;
         /**
          * 尺寸是否为空
@@ -425,6 +431,120 @@ declare namespace dou2d.sys {
 }
 declare namespace dou2d {
     /**
+     * 资源管理器
+     * * 提供资源配置文件, 通过该文件可以方便的使用一个简单的名称来指定特定的资源而不使用资源的路径
+     * * 使用该管理器需要保证资源名称的唯一性
+     * * 支持获取图集中的某个图片资源
+     * @author wizardc
+     */
+    class AssetManager {
+        private static _instance;
+        static get instance(): AssetManager;
+        private _itemMap;
+        private _sheetLoadingMap;
+        private constructor();
+        $init(): void;
+        /**
+         * 加载配置
+         */
+        loadConfig(url: string, resourceRoot?: string, callback?: (success: boolean) => void, thisObj?: any): void;
+        /**
+         * 加载配置
+         */
+        loadConfigAsync(url: string, resourceRoot?: string): Promise<void>;
+        /**
+         * 添加配置
+         */
+        addConfig(config: AssetConfigItem[], resourceRoot?: string): void;
+        /**
+         * 资源是否存在
+         */
+        hasRes(source: string): boolean;
+        /**
+         * 资源是否已经加载
+         */
+        isLoaded(source: string): boolean;
+        private getItem;
+        private getRealPath;
+        /**
+         * 加载资源
+         */
+        loadRes(source: string, priority?: number, callBack?: (data: any, source: string) => void, thisObject?: any): void;
+        private getSheetInfo;
+        private onSheetLoaded;
+        /**
+         * 加载资源
+         */
+        loadResAsync(source: string, priority?: number): Promise<any>;
+        /**
+         * 获取已经加载的资源项
+         */
+        getRes(source: string): any;
+        /**
+         * 加载资源组
+         */
+        loadGroup(sources: string[], priority?: number, callback?: (current: number, total: number, data: any, source: string) => void, thisObj?: any): void;
+        /**
+         * 加载资源组
+         */
+        loadGroupAsync(sources: string[], priority?: number): Promise<void>;
+        /**
+         * 销毁资源
+         */
+        destroyRes(source: string): boolean;
+    }
+    /**
+     * 资源管理器快速访问
+     */
+    const asset: AssetManager;
+}
+declare namespace dou2d {
+    /**
+     * 资源配置项
+     * @author wizardc
+     */
+    interface AssetConfigItem {
+        name: string;
+        type: AssetType;
+        url: string;
+        subkeys?: string[];
+    }
+    /**
+     * 图集配置
+     * @author wizardc
+     */
+    interface SheetConfig {
+        file: string;
+        frames: {
+            [name: string]: {
+                x: number;
+                y: number;
+                w: number;
+                h: number;
+                offX: number;
+                offY: number;
+                sourceW: number;
+                sourceH: number;
+            };
+        };
+    }
+}
+declare namespace dou2d {
+    /**
+     * 资源类型
+     * @author wizardc
+     */
+    const enum AssetType {
+        text = "text",
+        json = "json",
+        binary = "binary",
+        image = "image",
+        sheet = "sheet",
+        sound = "sound"
+    }
+}
+declare namespace dou2d {
+    /**
      * 显示对象
      * @author wizardc
      */
@@ -489,7 +609,7 @@ declare namespace dou2d {
         /**
          * 父容器
          */
-        readonly parent: DisplayObjectContainer;
+        get parent(): DisplayObjectContainer;
         /**
          * 设置父级显示对象
          */
@@ -497,20 +617,22 @@ declare namespace dou2d {
         /**
          * 子项列表
          */
-        readonly $children: DisplayObject[];
+        get $children(): DisplayObject[];
         /**
          * 舞台
          */
-        readonly stage: Stage;
+        get stage(): Stage;
         /**
          * 名称
          */
-        name: string;
+        set name(value: string);
+        get name(): string;
         /**
          * 当前显示对象的矩阵
          * * 当前值是对象时, 修改当前值的属性之后, 需要重新赋值才会生效
          */
-        matrix: Matrix;
+        set matrix(value: Matrix);
+        get matrix(): Matrix;
         /**
          * 设置矩阵
          */
@@ -530,105 +652,121 @@ declare namespace dou2d {
         /**
          * x 轴坐标
          */
-        x: number;
+        set x(value: number);
+        get x(): number;
         $setX(value: number): boolean;
         $getX(): number;
         /**
          * y 轴坐标
          */
-        y: number;
+        set y(value: number);
+        get y(): number;
         $setY(value: number): boolean;
         $getY(): number;
         /**
          * 水平缩放值
          */
-        scaleX: number;
+        set scaleX(value: number);
+        get scaleX(): number;
         $setScaleX(value: number): void;
         $getScaleX(): number;
         /**
          * 垂直缩放值
          */
-        scaleY: number;
+        set scaleY(value: number);
+        get scaleY(): number;
         $setScaleY(value: number): void;
         $getScaleY(): number;
         /**
          * 旋转值
          */
-        rotation: number;
+        set rotation(value: number);
+        get rotation(): number;
         $setRotation(value: number): void;
         $getRotation(): number;
         /**
          * 水平方向斜切
          */
-        skewX: number;
+        set skewX(value: number);
+        get skewX(): number;
         $setSkewX(value: number): void;
         $getSkewX(): number;
         /**
          * 垂直方向斜切
          */
-        skewY: number;
+        set skewY(value: number);
+        get skewY(): number;
         $setSkewY(value: number): void;
         $getSkewY(): number;
         /**
          * 宽度
          */
-        width: number;
+        set width(value: number);
+        get width(): number;
         $setWidth(value: number): void;
         $getWidth(): number;
         /**
          * 高度
          */
-        height: number;
+        set height(value: number);
+        get height(): number;
         $setHeight(value: number): void;
         $getHeight(): number;
         /**
          * 测量宽度
          */
-        readonly measuredWidth: number;
+        get measuredWidth(): number;
         /**
          * 测量高度
          */
-        readonly measuredHeight: number;
+        get measuredHeight(): number;
         /**
          * x 轴锚点
          */
-        anchorOffsetX: number;
+        set anchorOffsetX(value: number);
+        get anchorOffsetX(): number;
         $setAnchorOffsetX(value: number): void;
         $getAnchorOffsetX(): number;
         /**
          * y 轴锚点
          */
-        anchorOffsetY: number;
+        set anchorOffsetY(value: number);
+        get anchorOffsetY(): number;
         $setAnchorOffsetY(value: number): void;
         $getAnchorOffsetY(): number;
         /**
          * 是否可见
          */
-        visible: boolean;
+        set visible(value: boolean);
+        get visible(): boolean;
         /**
          * 是否不可见
          */
-        invisible: boolean;
+        set invisible(value: boolean);
+        get invisible(): boolean;
         /**
          * 最终是否可见
          */
-        readonly finalVisible: boolean;
+        get finalVisible(): boolean;
         $setVisible(value: boolean): void;
         $getVisible(): boolean;
         /**
          * 透明度
          */
-        alpha: number;
+        set alpha(value: number);
+        get alpha(): number;
         $setAlpha(value: number): void;
         $getAlpha(): number;
         /**
          * 给当前对象设置填充色
          */
-        tint: number;
+        set tint(value: number);
+        get tint(): number;
         /**
          * 混合模式
          */
-        blendMode: BlendMode;
+        set blendMode(value: BlendMode);
+        get blendMode(): BlendMode;
         $setBlendMode(value: BlendMode): void;
         $getBlendMode(): BlendMode;
         /**
@@ -636,7 +774,8 @@ declare namespace dou2d {
          * * 当前值是对象时, 修改当前值的属性之后, 需要重新赋值才会生效
          * * 显示对象被裁切为矩形定义的大小, 当您更改 scrollRect 对象的 x 和 y 属性时, 它会在矩形内滚动
          */
-        scrollRect: Rectangle;
+        set scrollRect(value: Rectangle);
+        get scrollRect(): Rectangle;
         $setScrollRect(value: Rectangle): void;
         $getScrollRect(): Rectangle;
         /**
@@ -646,53 +785,62 @@ declare namespace dou2d {
          * * 如果遮罩是一个显示对象, 要确保当舞台缩放时蒙版仍然有效需要将该遮罩添加到显示列表中
          * * 如果遮罩是一个显示对象, 该遮罩对象不能用于遮罩多个执行调用的显示对象, 将其分配给第二个显示对象时, 会撤消其作为第一个对象的遮罩
          */
-        mask: DisplayObject | Rectangle;
+        set mask(value: DisplayObject | Rectangle);
+        get mask(): DisplayObject | Rectangle;
         $setMask(value: DisplayObject | Rectangle): void;
         $getMask(): DisplayObject | Rectangle;
         /**
          * 包含当前与显示对象关联的每个滤镜对象的索引数组
          */
-        filters: (Filter | CustomFilter)[];
+        set filters(value: (Filter | CustomFilter)[]);
+        get filters(): (Filter | CustomFilter)[];
         $setFilters(value: (Filter | CustomFilter)[]): void;
         $getFilters(): (Filter | CustomFilter)[];
         /**
          * 当前对象的滤镜裁剪区域
          * * 注意: 设定后仅渲染设定了裁剪区域内的图像, 同时滤镜也按照该区域进行处理, 不设定按照默认尺寸进行渲染
          */
-        filterClip: Rectangle;
+        set filterClip(value: Rectangle);
+        get filterClip(): Rectangle;
         $setFilterClip(value: Rectangle): void;
         $getFilterClip(): Rectangle;
         /**
          * 是否将当前的显示对象缓存为位图
          */
-        cacheAsBitmap: boolean;
+        set cacheAsBitmap(value: boolean);
+        get cacheAsBitmap(): boolean;
         $setHasDisplayList(value: boolean): void;
         /**
          * 是否接收触摸事件
          */
-        touchEnabled: boolean;
+        set touchEnabled(value: boolean);
+        get touchEnabled(): boolean;
         $setTouchEnabled(value: boolean): void;
         $getTouchEnabled(): boolean;
         /**
          * 指定的点击区域
          */
-        hitArea: Rectangle;
+        set hitArea(value: Rectangle);
+        get hitArea(): Rectangle;
         $setHitArea(value: Rectangle): void;
         $getHitArea(): Rectangle;
         /**
          * 是否接受其它对象拖入
          */
-        dropEnabled: boolean;
+        set dropEnabled(value: boolean);
+        get dropEnabled(): boolean;
         $setDropEnabled(value: boolean): void;
         $getDropEnabled(): boolean;
         /**
          * 设置对象的 Z 轴顺序
          */
-        zIndex: number;
+        set zIndex(value: number);
+        get zIndex(): number;
         /**
          * 允许对象使用 zIndex 排序
          */
-        sortableChildren: boolean;
+        set sortableChildren(value: boolean);
+        get sortableChildren(): boolean;
         /**
          * 显示对象添加到舞台
          */
@@ -789,11 +937,12 @@ declare namespace dou2d {
         /**
          * 子项数量
          */
-        readonly numChildren: number;
+        get numChildren(): number;
         /**
          * 确定对象的子级是否支持触摸事件
          */
-        touchChildren: boolean;
+        set touchChildren(value: boolean);
+        get touchChildren(): boolean;
         $setTouchChildren(value: boolean): boolean;
         $getTouchChildren(): boolean;
         $onAddToStage(stage: Stage, nestLevel: number): void;
@@ -877,7 +1026,7 @@ declare namespace dou2d {
         /**
          * 矢量绘制对象
          */
-        readonly graphics: Graphics;
+        get graphics(): Graphics;
         $onRemoveFromStage(): void;
         $measureContentBounds(bounds: Rectangle): void;
     }
@@ -893,7 +1042,7 @@ declare namespace dou2d {
         /**
          * 矢量绘制对象
          */
-        readonly graphics: Graphics;
+        get graphics(): Graphics;
         $onRemoveFromStage(): void;
         $measureContentBounds(bounds: Rectangle): void;
     }
@@ -914,31 +1063,36 @@ declare namespace dou2d {
         /**
          * 舞台的帧速率
          */
-        frameRate: number;
+        set frameRate(value: number);
+        get frameRate(): number;
         /**
          * 舞台的当前宽度
          */
-        readonly stageWidth: number;
+        get stageWidth(): number;
         /**
          * 舞台的当前高度
          */
-        readonly stageHeight: number;
+        get stageHeight(): number;
         /**
          * 舞台缩放模式
          */
-        scaleMode: StageScaleMode;
+        set scaleMode(value: StageScaleMode);
+        get scaleMode(): StageScaleMode;
         /**
          * 屏幕横竖屏显示方式
          */
-        orientation: OrientationMode;
+        set orientation(value: OrientationMode);
+        get orientation(): OrientationMode;
         /**
          * 绘制纹理的缩放比率
          */
-        textureScaleFactor: number;
+        set textureScaleFactor(value: number);
+        get textureScaleFactor(): number;
         /**
          * 屏幕可以同时触摸的数量
          */
-        maxTouches: number;
+        set maxTouches(value: number);
+        get maxTouches(): number;
         $setStageSize(width: number, height: number): void;
         /**
          * 设置分辨率尺寸
@@ -1019,25 +1173,29 @@ declare namespace dou2d {
         /**
          * 纹理
          */
-        texture: Texture;
+        set texture(value: Texture);
+        get texture(): Texture;
         $setTexture(value: Texture): boolean;
         $getTexture(): Texture;
         /**
          * 九宫格
          */
-        scale9Grid: Rectangle;
+        set scale9Grid(value: Rectangle);
+        get scale9Grid(): Rectangle;
         $setScale9Grid(value: Rectangle): void;
         $getScale9Grid(): Rectangle;
         /**
          * 位图填充方式
          */
-        fillMode: BitmapFillMode;
+        set fillMode(value: BitmapFillMode);
+        get fillMode(): BitmapFillMode;
         $setFillMode(value: BitmapFillMode): boolean;
         $getFillMode(): BitmapFillMode;
         /**
          * 控制在缩放时是否对位图进行平滑处理
          */
-        smoothing: boolean;
+        set smoothing(value: boolean);
+        get smoothing(): boolean;
         $setSmoothing(value: boolean): void;
         $getSmoothing(): boolean;
         /**
@@ -1045,7 +1203,8 @@ declare namespace dou2d {
          * * 设置为true显示对象本身的透明区域将能够被穿透
          * * 注意: 若图片资源是以跨域方式从外部服务器加载的, 将无法访问图片的像素数据, 而导致此属性失效
          */
-        pixelHitTest: boolean;
+        set pixelHitTest(value: boolean);
+        get pixelHitTest(): boolean;
         $onAddToStage(stage: Stage, nestLevel: number): void;
         $onRemoveFromStage(): void;
         $setWidth(value: number): boolean;
@@ -1305,16 +1464,17 @@ declare namespace dou2d {
         /**
          * 纹理宽度，只读属性，不可以设置
          */
-        readonly textureWidth: number;
+        get textureWidth(): number;
         $getTextureWidth(): number;
         $getScaleBitmapWidth(): number;
         /**
          * 纹理高度，只读属性，不可以设置
          */
-        readonly textureHeight: number;
+        get textureHeight(): number;
         $getTextureHeight(): number;
         $getScaleBitmapHeight(): number;
-        bitmapData: BitmapData;
+        set bitmapData(value: BitmapData);
+        get bitmapData(): BitmapData;
         $setBitmapData(value: BitmapData): void;
         $getBitmapData(): BitmapData;
         $initData(bitmapX: number, bitmapY: number, bitmapWidth: number, bitmapHeight: number, offsetX: number, offsetY: number, textureWidth: number, textureHeight: number, sourceWidth: number, sourceHeight: number, rotated?: boolean): void;
@@ -1349,7 +1509,7 @@ declare namespace dou2d {
         /**
          * 共享的位图数据
          */
-        readonly texture: Texture;
+        get texture(): Texture;
         /**
          * 根据指定纹理名称获取一个缓存的纹理对象
          */
@@ -1401,7 +1561,7 @@ declare namespace dou2d {
      */
     class DragManager {
         private static _instance;
-        static readonly instance: DragManager;
+        static get instance(): DragManager;
         private _dragging;
         private _dropTarget;
         private _dragTarget;
@@ -1410,8 +1570,8 @@ declare namespace dou2d {
         private _offsetX;
         private _offsetY;
         private constructor();
-        readonly dragging: boolean;
-        readonly originDrag: DisplayObject;
+        get dragging(): boolean;
+        get originDrag(): DisplayObject;
         $dropRegister(target: DisplayObject, canDrop: boolean): void;
         private stageMoveHandler;
         private onMove;
@@ -1806,8 +1966,8 @@ declare namespace dou2d {
         private _bubbles;
         private _currentTarget;
         private _isPropagationStopped;
-        readonly bubbles: boolean;
-        readonly currentTarget: dou.IEventDispatcher;
+        get bubbles(): boolean;
+        get currentTarget(): dou.IEventDispatcher;
         $initEvent2D(type: string, data?: any, bubbles?: boolean, cancelable?: boolean): void;
         $setCurrentTarget(currentTarget: dou.IEventDispatcher): void;
         stopPropagation(): void;
@@ -1842,12 +2002,12 @@ declare namespace dou2d {
         private _localChanged;
         private _localX;
         private _localY;
-        readonly touchPointID: number;
-        readonly touchDown: boolean;
-        readonly stageX: number;
-        readonly stageY: number;
-        readonly localX: number;
-        readonly localY: number;
+        get touchPointID(): number;
+        get touchDown(): boolean;
+        get stageX(): number;
+        get stageY(): number;
+        get localX(): number;
+        get localY(): number;
         $initTouchEvent(type: string, stageX: number, stageY: number, touchPointID?: number, touchDown?: boolean, bubbles?: boolean, cancelable?: boolean): void;
         $setTarget(target: dou.IEventDispatcher): void;
         private getLocalPosition;
@@ -1893,7 +2053,7 @@ declare namespace dou2d {
          */
         static DRAG_OVER: string;
         private _dragData;
-        readonly dragData: any;
+        get dragData(): any;
         $initDragEvent(type: string, dragData?: any, bubbles?: boolean, cancelable?: boolean): void;
         onRecycle(): void;
     }
@@ -1914,7 +2074,7 @@ declare namespace dou2d {
          */
         $uniforms: any;
         constructor(type: string);
-        readonly type: string;
+        get type(): string;
         onPropertyChange(): void;
         protected updatePadding(): void;
     }
@@ -1927,10 +2087,14 @@ declare namespace dou2d {
      */
     class ColorBrushFilter extends Filter {
         constructor(r?: number, g?: number, b?: number, a?: number);
-        r: number;
-        g: number;
-        b: number;
-        a: number;
+        set r(value: number);
+        get r(): number;
+        set g(value: number);
+        get g(): number;
+        set b(value: number);
+        get b(): number;
+        set a(value: number);
+        get a(): number;
     }
 }
 declare namespace dou2d {
@@ -1948,7 +2112,8 @@ declare namespace dou2d {
         /**
          * 一个 4 x 5 矩阵, 第一行五个元素乘以矢量 [srcR,srcG,srcB,srcA,1] 以确定输出的红色值, 第二行的五个元素确定输出的绿色值, 以此类推
          */
-        matrix: number[];
+        set matrix(value: number[]);
+        get matrix(): number[];
         private setMatrix;
     }
 }
@@ -1970,11 +2135,13 @@ declare namespace dou2d {
         /**
          * 水平模糊量
          */
-        blurX: number;
+        set blurX(value: number);
+        get blurX(): number;
         /**
          * 垂直模糊量
          */
-        blurY: number;
+        set blurY(value: number);
+        get blurY(): number;
         protected updatePadding(): void;
     }
     namespace filter {
@@ -1983,14 +2150,16 @@ declare namespace dou2d {
          */
         class BlurXFilter extends Filter {
             constructor(blurX?: number);
-            blurX: number;
+            set blurX(value: number);
+            get blurX(): number;
         }
         /**
          * @private
          */
         class BlurYFilter extends Filter {
             constructor(blurY?: number);
-            blurY: number;
+            set blurY(value: number);
+            get blurY(): number;
         }
     }
 }
@@ -2014,11 +2183,12 @@ declare namespace dou2d {
          * 滤镜的内边距
          * 如果自定义滤镜所需区域比原区域大 (描边等), 需要手动设置
          */
-        padding: number;
+        set padding(value: number);
+        get padding(): number;
         /**
          * 着色器中 uniform 的值
          */
-        readonly uniforms: any;
+        get uniforms(): any;
         onPropertyChange(): void;
     }
 }
@@ -2051,31 +2221,38 @@ declare namespace dou2d {
         /**
          * 光晕颜色
          */
-        color: number;
+        set color(value: number);
+        get color(): number;
         /**
          * 透明度
          */
-        alpha: number;
+        set alpha(value: number);
+        get alpha(): number;
         /**
          * 水平模糊, 有效值为 0 到 255
          */
-        blurX: number;
+        set blurX(value: number);
+        get blurX(): number;
         /**
          * 垂直模糊, 有效值为 0 到 255
          */
-        blurY: number;
+        set blurY(value: number);
+        get blurY(): number;
         /**
          * 强度, 有效值为 0 到 255
          */
-        strength: number;
+        set strength(value: number);
+        get strength(): number;
         /**
          * 是否为内发光
          */
-        inner: boolean;
+        set inner(value: boolean);
+        get inner(): boolean;
         /**
          * 是否具有挖空效果
          */
-        knockout: boolean;
+        set knockout(value: boolean);
+        get knockout(): boolean;
         protected updatePadding(): void;
     }
 }
@@ -2104,15 +2281,18 @@ declare namespace dou2d {
         /**
          * 阴影的偏移距离
          */
-        distance: number;
+        set distance(value: number);
+        get distance(): number;
         /**
          * 阴影的角度
          */
-        angle: number;
+        set angle(value: number);
+        get angle(): number;
         /**
          * 是否隐藏对象
          */
-        hideObject: boolean;
+        set hideObject(value: boolean);
+        get hideObject(): boolean;
         protected updatePadding(): void;
     }
 }
@@ -2125,6 +2305,17 @@ declare namespace dou2d {
         load(url: string, callback: (url: string, data: any) => void, thisObj: any): void;
         private createTexture;
         release(data: Texture): boolean;
+    }
+}
+declare namespace dou2d {
+    /**
+     * 图集加载器
+     * @author wizardc
+     */
+    class SheetAnalyzer implements dou.IAnalyzer {
+        load(url: string, callback: (url: string, data: any) => void, thisObj: any): void;
+        private createSheet;
+        release(data: SpriteSheet): boolean;
     }
 }
 declare namespace dou2d {
@@ -2165,11 +2356,13 @@ declare namespace dou2d {
         /**
          * 表示粒子出现点 x 坐标
          */
-        emitterX: number;
+        set emitterX(value: number);
+        get emitterX(): number;
         /**
          * 表示粒子出现点 y 坐标
          */
-        emitterY: number;
+        set emitterY(value: number);
+        get emitterY(): number;
         /**
          * 更换粒子纹理
          */
@@ -2557,7 +2750,7 @@ declare namespace dou2d.rendering {
          */
         protected _renderCount: number;
         constructor();
-        readonly renderCount: number;
+        get renderCount(): number;
         /**
          * 自动清空自身的绘制数据
          */
@@ -2836,7 +3029,7 @@ declare namespace dou2d.rendering {
          */
         matrix: Matrix;
         constructor();
-        readonly renderCount: number;
+        get renderCount(): number;
         addNode(node: RenderNode): void;
         cleanBeforeRender(): void;
     }
@@ -2865,7 +3058,7 @@ declare namespace dou2d.rendering {
         /**
          * 路径类型
          */
-        readonly type: number;
+        get type(): number;
         /**
          * 将当前绘图位置移动到 (x, y) 如果缺少任何一个参数, 则此方法将失败, 并且当前绘图位置不改变
          * @param x 一个表示相对于父显示对象注册点的水平位置的数字 (以像素为单位)
@@ -3092,8 +3285,8 @@ declare namespace dou2d.rendering {
         offsetX: number;
         offsetY: number;
         constructor(width?: number, height?: number, root?: boolean);
-        readonly width: number;
-        readonly height: number;
+        get width(): number;
+        get height(): number;
         enableStencil(): void;
         disableStencil(): void;
         restoreStencil(): void;
@@ -3605,11 +3798,11 @@ declare namespace dou2d.rendering {
         /**
          * 渲染缓冲的宽度
          */
-        readonly width: number;
+        get width(): number;
         /**
          * 渲染缓冲的高度
          */
-        readonly height: number;
+        get height(): number;
         /**
          * 改变渲染缓冲的大小并清空缓冲区
          * @param width 改变后的宽
@@ -4074,119 +4267,137 @@ declare namespace dou2d {
         /**
          * 要使用的字体的名称或用逗号分隔的字体名称列表
          */
-        fontFamily: string;
+        set fontFamily(value: string);
+        get fontFamily(): string;
         $setFontFamily(value: string): boolean;
         $getFontFamily(): string;
         /**
          * 字体大小
          */
-        size: number;
+        set size(value: number);
+        get size(): number;
         $setSize(value: number): boolean;
         $getSize(): number;
         /**
          * 是否显示为粗体
          */
-        bold: boolean;
+        set bold(value: boolean);
+        get bold(): boolean;
         $setBold(value: boolean): boolean;
         $getBold(): boolean;
         /**
          * 是否显示为斜体
          */
-        italic: boolean;
+        set italic(value: boolean);
+        get italic(): boolean;
         $setItalic(value: boolean): boolean;
         $getItalic(): boolean;
         /**
          * 文本的水平对齐方式
          */
-        textAlign: HorizontalAlign;
+        set textAlign(value: HorizontalAlign);
+        get textAlign(): HorizontalAlign;
         $setTextAlign(value: HorizontalAlign): boolean;
         $getTextAlign(): HorizontalAlign;
         /**
          * 文字的垂直对齐方式
          */
-        verticalAlign: VerticalAlign;
+        set verticalAlign(value: VerticalAlign);
+        get verticalAlign(): VerticalAlign;
         $setVerticalAlign(value: VerticalAlign): boolean;
         $getVerticalAlign(): VerticalAlign;
         /**
          * 行与行之间的垂直间距量
          */
-        lineSpacing: number;
+        set lineSpacing(value: number);
+        get lineSpacing(): number;
         $setLineSpacing(value: number): boolean;
         $getLineSpacing(): number;
         /**
          * 文本颜色
          */
-        textColor: number;
+        set textColor(value: number);
+        get textColor(): number;
         $setTextColor(value: number): boolean;
         $getTextColor(): number;
         /**
          * 文本字段是按单词换行还是按字符换行
          */
-        wordWrap: boolean;
+        set wordWrap(value: boolean);
+        get wordWrap(): boolean;
         $setWordWrap(value: boolean): void;
         $getWordWrap(): boolean;
         /**
          * 文本类型
          */
-        type: TextFieldType;
+        set type(value: TextFieldType);
+        get type(): TextFieldType;
         $setType(value: TextFieldType): boolean;
         $getType(): TextFieldType;
         /**
          * 弹出键盘的类型
          */
-        inputType: string;
+        set inputType(value: string);
+        get inputType(): string;
         $setInputType(value: string): boolean;
         $getInputType(): string;
         /**
          * 当前文本
          */
-        text: string;
+        set text(value: string);
+        get text(): string;
         $setText(value: string): boolean;
         $setBaseText(value: string): boolean;
         $getText(): string;
         /**
          * 否是密码文本
          */
-        displayAsPassword: boolean;
+        set displayAsPassword(value: boolean);
+        get displayAsPassword(): boolean;
         $setDisplayAsPassword(value: boolean): boolean;
         $getDisplayAsPassword(): boolean;
         /**
          * 描边颜色
          */
-        strokeColor: number;
+        set strokeColor(value: number);
+        get strokeColor(): number;
         $setStrokeColor(value: number): boolean;
         $getStrokeColor(): number;
         /**
          * 描边宽度, 0 为没有描边
          */
-        stroke: number;
+        set stroke(value: number);
+        get stroke(): number;
         $setStroke(value: number): boolean;
         $getStroke(): number;
         /**
          * 文本字段中最多可输入的字符数
          */
-        maxChars: number;
+        set maxChars(value: number);
+        get maxChars(): number;
         $setMaxChars(value: number): boolean;
         $getMaxChars(): number;
         /**
          * 文本在文本字段中的垂直位置, 单位行
          */
-        scrollV: number;
+        set scrollV(value: number);
+        get scrollV(): number;
         $setScrollV(value: number): boolean;
         $getScrollV(): number;
         /**
          * scrollV 的最大值
          */
-        readonly maxScrollV: number;
+        get maxScrollV(): number;
         $getMaxScrollV(): number;
         /**
          * 文本行数
          */
-        readonly numLines: number;
+        get numLines(): number;
         /**
          * 是否为多行文本
          */
-        multiline: boolean;
+        set multiline(value: boolean);
+        get multiline(): boolean;
         $setMultiline(value: boolean): boolean;
         $getMultiline(): boolean;
         /**
@@ -4196,51 +4407,58 @@ declare namespace dou2d {
          * 如果值为一串字符, 则只能在文本字段中输入该字符串中的字符, 可以使用连字符 (-) 指定一个范围
          * 如果字符串以尖号 (^) 开头, 表示后面的字符都不能输入
          */
-        restrict: string;
+        set restrict(value: string);
+        get restrict(): string;
         $setRestrict(value: string): boolean;
         $getRestrict(): string;
         /**
          * 是否有边框
          */
-        border: boolean;
+        set border(value: boolean);
+        get border(): boolean;
         $setBorder(value: boolean): boolean;
         $getBorder(): boolean;
         /**
          * 边框的颜色
          */
-        borderColor: number;
+        set borderColor(value: number);
+        get borderColor(): number;
         $setBorderColor(value: number): boolean;
         $getBorderColor(): number;
         /**
          * 是否有背景
          */
-        background: boolean;
+        set background(value: boolean);
+        get background(): boolean;
         $setBackground(value: boolean): boolean;
         $getBackground(): boolean;
         /**
          * 背景的颜色
          */
-        backgroundColor: number;
+        set backgroundColor(value: number);
+        get backgroundColor(): number;
         $setBackgroundColor(value: number): boolean;
         $getBackgroundColor(): number;
         /**
          * 设置富文本
          */
-        textFlow: ITextElement[];
+        set textFlow(textArr: ITextElement[]);
+        get textFlow(): ITextElement[];
         $setTextFlow(textArr: ITextElement[]): boolean;
         $getTextFlow(): ITextElement[];
         /**
          * 获取文本测量宽度
          */
-        readonly textWidth: number;
+        get textWidth(): number;
         /**
          * 获取文本测量高度
          */
-        readonly textHeight: number;
+        get textHeight(): number;
         /**
          * 触发 link 事件后是否阻止父级容器后续的 tap 事件冒泡
          */
-        linkPreventTap: boolean;
+        set linkPreventTap(value: boolean);
+        get linkPreventTap(): boolean;
         $setLinkPreventTap(value: boolean): void;
         $getLinkPreventTap(): boolean;
         $setWidth(value: number): boolean;
@@ -4343,53 +4561,60 @@ declare namespace dou2d {
         /**
          * 要显示的文本内容
          */
-        text: string;
+        set text(value: string);
+        get text(): string;
         $setText(value: string): boolean;
         $getText(): string;
         /**
          * 位图字体
          */
-        font: BitmapFont;
+        set font(value: BitmapFont);
+        get font(): BitmapFont;
         $setFont(value: BitmapFont): boolean;
         $getFont(): BitmapFont;
         /**
          * 控制在缩放时是否进行平滑处理
          */
-        smoothing: boolean;
+        set smoothing(value: boolean);
+        get smoothing(): boolean;
         $setSmoothing(value: boolean): void;
         $getSmoothing(): boolean;
         /**
          * 一个整数, 表示行与行之间的垂直间距量
          */
-        lineSpacing: number;
+        set lineSpacing(value: number);
+        get lineSpacing(): number;
         $setLineSpacing(value: number): boolean;
         $getLineSpacing(): number;
         /**
          * 一个整数, 表示字符之间的距离
          */
-        letterSpacing: number;
+        set letterSpacing(value: number);
+        get letterSpacing(): number;
         $setLetterSpacing(value: number): boolean;
         $getLetterSpacing(): number;
         /**
          * 文本的水平对齐方式
          */
-        textAlign: HorizontalAlign;
+        set textAlign(value: HorizontalAlign);
+        get textAlign(): HorizontalAlign;
         $setTextAlign(value: HorizontalAlign): boolean;
         $getTextAlign(): HorizontalAlign;
         /**
          * 文字的垂直对齐方式
          */
-        verticalAlign: VerticalAlign;
+        set verticalAlign(value: VerticalAlign);
+        get verticalAlign(): VerticalAlign;
         $setVerticalAlign(value: VerticalAlign): boolean;
         $getVerticalAlign(): VerticalAlign;
         /**
          * 获取位图文本测量宽度
          */
-        readonly textWidth: number;
+        get textWidth(): number;
         /**
          * 获取位图文本测量高度
          */
-        readonly textHeight: number;
+        get textHeight(): number;
         $setWidth(value: number): boolean;
         $getWidth(): number;
         $setHeight(value: number): boolean;
@@ -4590,6 +4815,7 @@ declare namespace dou2d {
         function getStyleName(name: string, element?: any): string;
         function getFontString(node: rendering.TextNode, format: rendering.TextFormat): string;
         function toColorString(value: number): string;
+        function getRelativePath(url: string, fileName: string): string;
     }
 }
 declare namespace dou2d {
@@ -4720,15 +4946,16 @@ declare namespace dou2d {
         /**
          * 项目启动后经过的时间
          */
-        static readonly time: number;
+        static get time(): number;
         /**
          * 上一帧到这一帧经过的时间
          */
-        static readonly deltaTime: number;
+        static get deltaTime(): number;
         /**
          * 固定频率刷新时间间隔, 默认值为 50 毫秒
          */
-        static fixedDeltaTime: number;
+        static set fixedDeltaTime(value: number);
+        static get fixedDeltaTime(): number;
     }
     namespace sys {
         let deltaTime: number;

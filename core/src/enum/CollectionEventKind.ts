@@ -7,26 +7,26 @@ namespace douUI {
         /**
          * 集合添加了一个或多个项目
          */
-        ADD,
+        add,
         /**
          * 集合应用了排序或筛选
          */
-        REFRESH,
+        refresh,
         /**
          * 集合删除了一个或多个项目
          */
-        REMOVE,
+        remove,
         /**
          * 已替换确定的位置处的项目
          */
-        REPLACE,
+        replace,
         /**
          * 集合已彻底更改需要进行重置
          */
-        RESET,
+        reset,
         /**
          * 集合中一个或多个项目进行了更新
          */
-        UPDATE
+        update
     }
 }

@@ -1,19 +1,28 @@
-namespace douUI.core {
+namespace douUI.sys {
     /**
      * 组件接口
      * @author wizardc
      */
     export interface IUIComponent extends dou2d.DisplayObject {
-        // $setWidth(value: number): void;
-        // $getWidth(): number;
+        /**
+         * 接口类型
+         */
+        __interface_type__: "douUI.sys.IUIComponent";
 
-        // $setHeight(value: number): void;
-        // $getHeight(): number;
+        /**
+         * 组件属性
+         */
+        $UIComponent: Object;
 
         // /**
         //  * 创建子项
         //  */
         // protected createChildren():void;
+
+        // /**
+        //  * 创建子项
+        //  */
+        // protected childrenCreated():void;
 
         // /**
         //  * 提交属性
@@ -34,16 +43,6 @@ namespace douUI.core {
         //  * 标记父级容器的尺寸和显示列表为失效
         //  */
         // protected invalidateParentLayout():void;
-
-        /**
-         * 存放组件属性的对象
-         */
-        $UIComponent: Object;
-
-        /**
-         * 指定此组件是否包含在父容器的布局中
-         */
-        $includeInLayout: boolean;
 
         /**
          * 指定此组件是否包含在父容器的布局中

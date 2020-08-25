@@ -1,4 +1,4 @@
-namespace douUI.core {
+namespace douUI.sys {
     /**
      * 矩阵工具类
      * @author wizardc

@@ -37,11 +37,15 @@ var dou2d;
         function markCannotUse(instance, property, defaultValue) {
             Object.defineProperty(instance.prototype, property, {
                 get: function () {
-                    console.warn(`This class cannot use the property "${property}"`);
+                    if (DEBUG) {
+                        console.warn(`属性"${property}"不能获取`);
+                    }
                     return defaultValue;
                 },
                 set: function (value) {
-                    console.warn(`This class cannot use the property "${property}"`);
+                    if (DEBUG) {
+                        console.warn(`属性"${property}"不能设置`);
+                    }
                 },
                 enumerable: true,
                 configurable: true
@@ -1002,7 +1006,7 @@ var dou2d;
                     this._stage.addChild(this._root);
                 }
                 else {
-                    console.error("Root class must inherit from dou2d.DisplayObject.");
+                    console.error(`根容器类必须继承自"dou2d.DisplayObject"`);
                 }
             }
             pause() {
@@ -1031,6 +1035,233 @@ var dou2d;
         }
         sys.Player = Player;
     })(sys = dou2d.sys || (dou2d.sys = {}));
+})(dou2d || (dou2d = {}));
+var dou2d;
+(function (dou2d) {
+    /**
+     * 资源管理器
+     * * 提供资源配置文件, 通过该文件可以方便的使用一个简单的名称来指定特定的资源而不使用资源的路径
+     * * 使用该管理器需要保证资源名称的唯一性
+     * * 支持获取图集中的某个图片资源
+     * @author wizardc
+     */
+    class AssetManager {
+        constructor() {
+            this._itemMap = {};
+            this._sheetLoadingMap = {};
+        }
+        static get instance() {
+            return AssetManager._instance || (AssetManager._instance = new AssetManager());
+        }
+        $init() {
+            dou.loader.registerAnalyzer("text" /* text */, new dou.TextAnalyzer());
+            dou.loader.registerExtension("txt", "text" /* text */);
+            dou.loader.registerExtension("xml", "text" /* text */);
+            dou.loader.registerAnalyzer("json" /* json */, new dou.JsonAnalyzer());
+            dou.loader.registerExtension("json", "json" /* json */);
+            dou.loader.registerAnalyzer("binary" /* binary */, new dou.BytesAnalyzer());
+            dou.loader.registerExtension("bin", "binary" /* binary */);
+            dou.loader.registerAnalyzer("image" /* image */, new dou2d.ImageAnalyzer());
+            dou.loader.registerExtension("jpg", "image" /* image */);
+            dou.loader.registerExtension("jpeg", "image" /* image */);
+            dou.loader.registerExtension("png", "image" /* image */);
+            dou.loader.registerExtension("webp", "image" /* image */);
+            dou.loader.registerAnalyzer("sound" /* sound */, new dou.SoundAnalyzer());
+            dou.loader.registerExtension("mp3", "sound" /* sound */);
+            dou.loader.registerExtension("wav", "sound" /* sound */);
+            dou.loader.registerExtension("ogg", "sound" /* sound */);
+            dou.loader.registerAnalyzer("sheet" /* sheet */, new dou2d.SheetAnalyzer());
+        }
+        /**
+         * 加载配置
+         */
+        loadConfig(url, resourceRoot, callback, thisObj) {
+            dou.loader.load(url, (data, url) => {
+                if (data) {
+                    this.addConfig(data, resourceRoot);
+                    if (callback) {
+                        callback.call(thisObj, true);
+                    }
+                }
+                else {
+                    console.error(`资源配置文件加载失败: ${url}`);
+                    callback.call(thisObj, false);
+                }
+            }, this, "json" /* json */);
+        }
+        /**
+         * 加载配置
+         */
+        loadConfigAsync(url, resourceRoot) {
+            return new Promise((resolve, reject) => {
+                this.loadConfig(url, resourceRoot, (success) => {
+                    if (success) {
+                        resolve();
+                    }
+                    else {
+                        reject();
+                    }
+                }, this);
+            });
+        }
+        /**
+         * 添加配置
+         */
+        addConfig(config, resourceRoot) {
+            for (let item of config) {
+                if (DEBUG && this._itemMap[item.name]) {
+                    console.warn(`资源名称已存在: ${item.name}`);
+                }
+                this._itemMap[item.name] = {
+                    name: item.name,
+                    type: item.type,
+                    root: resourceRoot,
+                    url: item.url,
+                    subkeys: item.subkeys
+                };
+            }
+        }
+        /**
+         * 资源是否存在
+         */
+        hasRes(source) {
+            return this._itemMap.hasOwnProperty(source);
+        }
+        /**
+         * 资源是否已经加载
+         */
+        isLoaded(source) {
+            let item = this.getItem(source);
+            if (!item) {
+                return false;
+            }
+            let url = this.getRealPath(item);
+            return dou.loader.isLoaded(url);
+        }
+        getItem(source) {
+            if (source.indexOf(".") == -1) {
+                return this._itemMap[source];
+            }
+            return this._itemMap[source.split(".")[0]];
+        }
+        getRealPath(item) {
+            return (item.root || "") + item.url;
+        }
+        /**
+         * 加载资源
+         */
+        loadRes(source, priority, callBack, thisObject) {
+            let item = this.getItem(source);
+            if (!item) {
+                callBack.call(thisObject, null, source);
+                return;
+            }
+            let realPath = this.getRealPath(item);
+            let sheetInfo = this.getSheetInfo(source);
+            if (sheetInfo) {
+                if (dou.loader.isLoaded(realPath)) {
+                    let sheet = dou.loader.get(realPath);
+                    callBack.call(thisObject, sheet.getTexture(sheetInfo.frame), source);
+                }
+                else {
+                    if (!this._sheetLoadingMap[realPath]) {
+                        this._sheetLoadingMap[realPath] = [];
+                        dou.loader.load(realPath, this.onSheetLoaded, this, item.type, priority);
+                    }
+                    this._sheetLoadingMap[realPath].push({ source, callBack, thisObject });
+                }
+            }
+            else {
+                dou.loader.load(realPath, (data, url) => {
+                    callBack.call(thisObject, data, source);
+                }, this, item.type, priority);
+            }
+        }
+        getSheetInfo(source) {
+            if (source.indexOf(".") == -1) {
+                return null;
+            }
+            let items = source.split(".");
+            return { file: items[0] + "_json", frame: items[1] };
+        }
+        onSheetLoaded(data, url) {
+            let callBackList = this._sheetLoadingMap[url];
+            delete this._sheetLoadingMap[url];
+            for (let item of callBackList) {
+                item.callBack.call(item.thisObject, data ? data.getTexture(item.source.split(".")[1]) : null, item.source);
+            }
+        }
+        /**
+         * 加载资源
+         */
+        loadResAsync(source, priority) {
+            return new Promise((resolve, reject) => {
+                this.loadRes(source, priority, (data, source) => {
+                    resolve(data);
+                }, this);
+            });
+        }
+        /**
+         * 获取已经加载的资源项
+         */
+        getRes(source) {
+            let item = this.getItem(source);
+            if (!item) {
+                return null;
+            }
+            let realPath = this.getRealPath(item);
+            let sheetInfo = this.getSheetInfo(source);
+            if (sheetInfo) {
+                let sheet = dou.loader.get(realPath);
+                if (sheet) {
+                    return sheet.getTexture(sheetInfo.frame);
+                }
+                return null;
+            }
+            return dou.loader.get(realPath);
+        }
+        /**
+         * 加载资源组
+         */
+        loadGroup(sources, priority, callback, thisObj) {
+            let current = 0, total = sources.length;
+            let itemCallback = (data, source) => {
+                current++;
+                callback.call(thisObj, current, total, data, source);
+            };
+            for (let source of sources) {
+                this.loadRes(source, priority, itemCallback, this);
+            }
+        }
+        /**
+         * 加载资源组
+         */
+        loadGroupAsync(sources, priority) {
+            return new Promise((resolve, reject) => {
+                this.loadGroup(sources, priority, (current, total, data, source) => {
+                    if (current == total) {
+                        resolve();
+                    }
+                }, this);
+            });
+        }
+        /**
+         * 销毁资源
+         */
+        destroyRes(source) {
+            let item = this.getItem(source);
+            if (!item) {
+                return false;
+            }
+            let realPath = this.getRealPath(item);
+            return dou.loader.release(realPath);
+        }
+    }
+    dou2d.AssetManager = AssetManager;
+    /**
+     * 资源管理器快速访问
+     */
+    dou2d.asset = AssetManager.instance;
 })(dou2d || (dou2d = {}));
 var dou2d;
 (function (dou2d) {
@@ -2255,7 +2486,7 @@ var dou2d;
                         data = buffer.getPixels(localX - displayList.offsetX, localY - displayList.offsetY);
                     }
                     catch (e) {
-                        console.error("Cross domains pictures can not get pixel information!");
+                        console.error(`跨域图片不能获取像素信息`);
                     }
                 }
                 else {
@@ -2269,7 +2500,7 @@ var dou2d;
                         data = buffer.getPixels(1, 1);
                     }
                     catch (e) {
-                        console.error("Cross domains pictures can not get pixel information!");
+                        console.error(`跨域图片不能获取像素信息`);
                     }
                 }
                 if (data[3] === 0) {
@@ -2454,10 +2685,10 @@ var dou2d;
         $doAddChild(child, index, notifyListeners = true) {
             if (DEBUG) {
                 if (child == this) {
-                    throw new Error("An object cannot be added as a child of itthis.");
+                    throw new Error(`不能将自己作为自己的子项添加`);
                 }
                 else if ((child instanceof DisplayObjectContainer) && child.contains(this)) {
-                    throw new Error("An object cannot be added as a child to one of it's children (or children's children, etc.).");
+                    throw new Error(`不能将包含自己的容器作为自己的子项添加`);
                 }
             }
             let host = child.parent;
@@ -2561,7 +2792,7 @@ var dou2d;
             let lastIndex = this._children.indexOf(child);
             if (lastIndex < 0) {
                 if (DEBUG) {
-                    throw new Error("The supplied DisplayObject must be a child of the caller.");
+                    throw new Error(`操作的显示对象必须是自己的子项`);
                 }
             }
             if (lastIndex == index) {
@@ -5169,6 +5400,51 @@ var dou2d;
 var dou2d;
 (function (dou2d) {
     /**
+     * 图集加载器
+     * @author wizardc
+     */
+    class SheetAnalyzer {
+        load(url, callback, thisObj) {
+            let jsonAnalyzer = new dou.JsonAnalyzer();
+            jsonAnalyzer.load(url, (url, data) => {
+                if (data) {
+                    let imageAnalyzer = new dou2d.ImageAnalyzer();
+                    imageAnalyzer.load(dou2d.HtmlUtil.getRelativePath(url, data.file), (url, texture) => {
+                        if (texture) {
+                            callback.call(thisObj, url, this.createSheet(data, texture));
+                        }
+                        else {
+                            callback.call(thisObj, url);
+                        }
+                    }, this);
+                }
+                else {
+                    callback.call(thisObj, url);
+                }
+            }, this);
+        }
+        createSheet(data, texture) {
+            let frames = data.frames;
+            let sheet = new dou2d.SpriteSheet(texture);
+            for (let name in frames) {
+                let frame = frames[name];
+                sheet.createTexture(name, frame.x, frame.y, frame.w, frame.h, frame.offX, frame.offY, frame.sourceW, frame.sourceH);
+            }
+            return sheet;
+        }
+        release(data) {
+            if (data) {
+                data.dispose();
+                return true;
+            }
+            return false;
+        }
+    }
+    dou2d.SheetAnalyzer = SheetAnalyzer;
+})(dou2d || (dou2d = {}));
+var dou2d;
+(function (dou2d) {
+    /**
      * 粒子系统基类
      * @author wizardc
      */
@@ -6856,13 +7132,13 @@ var dou2d;
                 height = height || 1;
                 if (width < 1) {
                     if (DEBUG) {
-                        console.warn("WebGLRenderTarget _resize width = " + width);
+                        console.warn(`"WebGLRenderTarget"设定的宽度过小: ${width}`);
                     }
                     width = 1;
                 }
                 if (height < 1) {
                     if (DEBUG) {
-                        console.warn("WebGLRenderTarget _resize height = " + height);
+                        console.warn(`"WebGLRenderTarget"设定的高度过小: ${height}`);
                     }
                     height = 1;
                 }
@@ -7388,7 +7664,7 @@ var dou2d;
                         }
                         else {
                             if (DEBUG) {
-                                console.warn("filter custom: uniform " + key + " not defined!");
+                                console.warn(`自定义滤镜的"uniform": "${key}"未定义`);
                             }
                         }
                     }
@@ -9332,7 +9608,7 @@ var dou2d;
                 gl.compileShader(shader);
                 let compiled = gl.getShaderParameter(shader, gl.COMPILE_STATUS);
                 if (DEBUG && !compiled) {
-                    console.error("shader not compiled!");
+                    console.error(`着色器未成功编译`);
                     console.error(gl.getShaderInfoLog(shader));
                 }
                 return shader;
@@ -11869,7 +12145,9 @@ var dou2d;
                             xPos += emptyWidth;
                         }
                         else {
-                            console.warn(`BitmapText no corresponding characters: ${character}, please check the configuration file.`);
+                            if (DEBUG) {
+                                console.warn(`未找到字符"${character}", 请检查配置`);
+                            }
                         }
                         continue;
                     }
@@ -11954,7 +12232,9 @@ var dou2d;
                             textureHeight = emptyHeight;
                         }
                         else {
-                            console.warn(`BitmapText no corresponding characters: ${character}, please check the configuration file.`);
+                            if (DEBUG) {
+                                console.warn(`未找到字符"${character}", 请检查配置`);
+                            }
                             if (isFirstChar) {
                                 isFirstChar = false;
                             }
@@ -12074,7 +12354,7 @@ var dou2d;
                     addToResult(htmltext.substring(firstIdx, starIdx), stack, result);
                     let fontEnd = htmltext.indexOf(">", starIdx);
                     if (fontEnd == -1) {
-                        console.error("XML format error!");
+                        console.error(`XML 格式错误`);
                         fontEnd = starIdx;
                     }
                     else if (htmltext.charAt(starIdx + 1) == "\/") {
@@ -12692,7 +12972,7 @@ var dou2d;
             catch (e) {
             }
             if (!gl) {
-                console.log("Nonsupport WebGL!");
+                console.error(`当前设备不支持 WebGL`);
             }
             return gl;
         }
@@ -12817,6 +13097,26 @@ var dou2d;
             return "#" + color;
         }
         HtmlUtil.toColorString = toColorString;
+        function getRelativePath(url, fileName) {
+            if (fileName.indexOf("://") != -1) {
+                return fileName;
+            }
+            url = url.split("\\").join("/");
+            var params = url.match(/#.*|\?.*/);
+            var paramUrl = "";
+            if (params) {
+                paramUrl = params[0];
+            }
+            var index = url.lastIndexOf("/");
+            if (index != -1) {
+                url = url.substring(0, index + 1) + fileName;
+            }
+            else {
+                url = fileName;
+            }
+            return url + paramUrl;
+        }
+        HtmlUtil.getRelativePath = getRelativePath;
     })(HtmlUtil = dou2d.HtmlUtil || (dou2d.HtmlUtil = {}));
 })(dou2d || (dou2d = {}));
 var dou2d;
@@ -12856,7 +13156,7 @@ var dou2d;
             // 引擎默认的空白纹理不允许删除
             if (texture[dou2d.sys.engineDefaultEmptyTexture]) {
                 if (DEBUG) {
-                    console.warn("Can not delete WebGLTexture: " + dou2d.sys.engineDefaultEmptyTexture);
+                    console.warn(`默认纹理不允许删除: ${dou2d.sys.engineDefaultEmptyTexture}`);
                 }
                 return;
             }
@@ -12866,7 +13166,7 @@ var dou2d;
             }
             else {
                 if (DEBUG) {
-                    console.warn("delete WebGLTexture gl is empty!");
+                    console.warn(`gl 对象为空, 无法删除纹理`);
                 }
             }
         }
@@ -13415,6 +13715,7 @@ var dou2d;
             this._touchHandler = new dou2d.touch.TouchHandler(dou2d.sys.stage, dou2d.sys.canvas);
             dou2d.sys.inputManager = new dou2d.input.InputManager();
             dou2d.sys.inputManager.initStageDelegateDiv(this._container, dou2d.sys.canvas);
+            dou2d.asset.$init();
             dou2d.sys.player = new dou2d.sys.Player(renderBuffer, dou2d.sys.stage, options.rootClass);
             dou2d.sys.player.start();
             dou2d.sys.ticker = new dou2d.sys.Ticker();
@@ -13547,3 +13848,130 @@ var dou2d;
     }
     dou2d.Engine = Engine;
 })(dou2d || (dou2d = {}));
+(function (Dou) {
+    Dou.AssetManager = dou2d.AssetManager;
+    Dou.asset = dou2d.asset;
+    Dou.sys.glContext = dou2d.sys.glContext;
+    Dou.sys.unpackPremultiplyAlphaWebgl = dou2d.sys.unpackPremultiplyAlphaWebgl;
+    Dou.sys.engineDefaultEmptyTexture = dou2d.sys.engineDefaultEmptyTexture;
+    Dou.sys.smoothing = dou2d.sys.smoothing;
+    Dou.sys.markCannotUse = dou2d.sys.markCannotUse;
+    Dou.sys.canvas = dou2d.sys.canvas;
+    Dou.sys.ticker = dou2d.sys.ticker;
+    Dou.sys.player = dou2d.sys.player;
+    Dou.sys.stage = dou2d.sys.stage;
+    Dou.sys.screenAdapter = dou2d.sys.screenAdapter;
+    Dou.sys.context2D = dou2d.sys.context2D;
+    Dou.sys.renderer = dou2d.sys.renderer;
+    Dou.sys.hitTestBuffer = dou2d.sys.hitTestBuffer;
+    Dou.sys.textureScaleFactor = dou2d.sys.textureScaleFactor;
+    Dou.sys.inputManager = dou2d.sys.inputManager;
+    Dou.sys.stat = dou2d.sys.stat;
+    Dou.sys.enterFrameCallBackList = dou2d.sys.enterFrameCallBackList;
+    Dou.sys.enterFrameOnceCallBackList = dou2d.sys.enterFrameOnceCallBackList;
+    Dou.sys.fixedEnterFrameCallBackList = dou2d.sys.fixedEnterFrameCallBackList;
+    Dou.sys.fixedEnterFrameOnceCallBackList = dou2d.sys.fixedEnterFrameOnceCallBackList;
+    Dou.sys.invalidateRenderFlag = dou2d.sys.invalidateRenderFlag;
+    Dou.sys.renderCallBackList = dou2d.sys.renderCallBackList;
+    Dou.sys.renderOnceCallBackList = dou2d.sys.renderOnceCallBackList;
+    Dou.sys.Player = dou2d.sys.Player;
+    Dou.sys.Ticker = dou2d.sys.Ticker;
+    Dou.sys.Stat = dou2d.sys.Stat;
+    Dou.StatPanel = dou2d.StatPanel;
+    Dou.Bitmap = dou2d.Bitmap;
+    Dou.BitmapData = dou2d.BitmapData;
+    Dou.DisplayObject = dou2d.DisplayObject;
+    Dou.DisplayObjectContainer = dou2d.DisplayObjectContainer;
+    Dou.Graphics = dou2d.Graphics;
+    Dou.RenderTexture = dou2d.RenderTexture;
+    Dou.Shape = dou2d.Shape;
+    Dou.Sprite = dou2d.Sprite;
+    Dou.SpriteSheet = dou2d.SpriteSheet;
+    Dou.Stage = dou2d.Stage;
+    Dou.Texture = dou2d.Texture;
+    Dou.DragManager = dou2d.DragManager;
+    Dou.DragEvent = dou2d.DragEvent;
+    Dou.Event2D = dou2d.Event2D;
+    Dou.TouchEvent = dou2d.TouchEvent;
+    Dou.BlurFilter = dou2d.BlurFilter;
+    Dou.filter.BlurXFilter = dou2d.filter.BlurXFilter;
+    Dou.filter.BlurYFilter = dou2d.filter.BlurYFilter;
+    Dou.ColorBrushFilter = dou2d.ColorBrushFilter;
+    Dou.ColorMatrixFilter = dou2d.ColorMatrixFilter;
+    Dou.CustomFilter = dou2d.CustomFilter;
+    Dou.DropShadowFilter = dou2d.DropShadowFilter;
+    Dou.Filter = dou2d.Filter;
+    Dou.GlowFilter = dou2d.GlowFilter;
+    Dou.Matrix = dou2d.Matrix;
+    Dou.Point = dou2d.Point;
+    Dou.Rectangle = dou2d.Rectangle;
+    Dou.ImageAnalyzer = dou2d.ImageAnalyzer;
+    Dou.SheetAnalyzer = dou2d.SheetAnalyzer;
+    Dou.GravityParticle = dou2d.GravityParticle;
+    Dou.GravityParticleSystem = dou2d.GravityParticleSystem;
+    Dou.Particle = dou2d.Particle;
+    Dou.ParticleRegion = dou2d.ParticleRegion;
+    Dou.ParticleSystem = dou2d.ParticleSystem;
+    Dou.rendering.BitmapNode = dou2d.rendering.BitmapNode;
+    Dou.rendering.GraphicsNode = dou2d.rendering.GraphicsNode;
+    Dou.rendering.GroupNode = dou2d.rendering.GroupNode;
+    Dou.rendering.NormalBitmapNode = dou2d.rendering.NormalBitmapNode;
+    Dou.rendering.RenderNode = dou2d.rendering.RenderNode;
+    Dou.rendering.TextNode = dou2d.rendering.TextNode;
+    Dou.rendering.FillPath = dou2d.rendering.FillPath;
+    Dou.rendering.GradientFillPath = dou2d.rendering.GradientFillPath;
+    Dou.rendering.Path2D = dou2d.rendering.Path2D;
+    Dou.rendering.StrokePath = dou2d.rendering.StrokePath;
+    Dou.rendering.CanvasRenderBuffer = dou2d.rendering.CanvasRenderBuffer;
+    Dou.rendering.CanvasRenderer = dou2d.rendering.CanvasRenderer;
+    Dou.rendering.DisplayList = dou2d.rendering.DisplayList;
+    Dou.rendering.DrawCommand = dou2d.rendering.DrawCommand;
+    Dou.rendering.RenderBuffer = dou2d.rendering.RenderBuffer;
+    Dou.rendering.RenderContext = dou2d.rendering.RenderContext;
+    Dou.rendering.Renderer = dou2d.rendering.Renderer;
+    Dou.rendering.RenderTarget = dou2d.rendering.RenderTarget;
+    Dou.rendering.VertexData = dou2d.rendering.VertexData;
+    Dou.DefaultScreenAdapter = dou2d.DefaultScreenAdapter;
+    Dou.rendering.Attribute = dou2d.rendering.Attribute;
+    Dou.rendering.Program = dou2d.rendering.Program;
+    Dou.rendering.ShaderLib = dou2d.rendering.ShaderLib;
+    Dou.rendering.Uniform = dou2d.rendering.Uniform;
+    Dou.input.HtmlText = dou2d.input.HtmlText;
+    Dou.input.InputController = dou2d.input.InputController;
+    Dou.input.InputManager = dou2d.input.InputManager;
+    Dou.BitmapFont = dou2d.BitmapFont;
+    Dou.BitmapText = dou2d.BitmapText;
+    Dou.HtmlTextParser = dou2d.HtmlTextParser;
+    Dou.TextField = dou2d.TextField;
+    Dou.touch.TouchHandler = dou2d.touch.TouchHandler;
+    Dou.touch.TouchHandlerImpl = dou2d.touch.TouchHandlerImpl;
+    Dou.Base64Util = dou2d.Base64Util;
+    Dou.BezierUtil = dou2d.BezierUtil;
+    Dou.callLater = dou2d.callLater;
+    Dou.callLaterUnique = dou2d.callLaterUnique;
+    Dou.sys.updateCallLater = dou2d.sys.updateCallLater;
+    Dou.sys.callLater = dou2d.sys.callLater;
+    Dou.sys.callLaterUnique = dou2d.sys.callLaterUnique;
+    Dou.Capabilities = dou2d.Capabilities;
+    Dou.HtmlUtil = dou2d.HtmlUtil;
+    Dou.registerImplementation = dou2d.registerImplementation;
+    Dou.getImplementation = dou2d.getImplementation;
+    Dou.MathUtil = dou2d.MathUtil;
+    Dou.setInterval = dou2d.setInterval;
+    Dou.clearInterval = dou2d.clearInterval;
+    Dou.sys.updateInterval = dou2d.sys.updateInterval;
+    Dou.sys.setInterval = dou2d.sys.setInterval;
+    Dou.sys.clearInterval = dou2d.sys.clearInterval;
+    Dou.setTimeout = dou2d.setTimeout;
+    Dou.clearTimeout = dou2d.clearTimeout;
+    Dou.sys.updateTimeout = dou2d.sys.updateTimeout;
+    Dou.sys.setTimeout = dou2d.sys.setTimeout;
+    Dou.sys.clearTimeout = dou2d.sys.clearTimeout;
+    Dou.TextFieldUtil = dou2d.TextFieldUtil;
+    Dou.Time = dou2d.Time;
+    Dou.sys.deltaTime = dou2d.sys.deltaTime;
+    Dou.sys.fixedDeltaTime = dou2d.sys.fixedDeltaTime;
+    Dou.sys.fixedPassedTime = dou2d.sys.fixedPassedTime;
+    Dou.UUID = dou2d.UUID;
+    Dou.WebGLUtil = dou2d.WebGLUtil;
+})(window.Dou || (window.Dou = {}));

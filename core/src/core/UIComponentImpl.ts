@@ -1,4 +1,4 @@
-namespace douUI.core {
+namespace douUI.sys {
     const validator = new Validator();
     const tempMatrix: dou2d.Matrix = new dou2d.Matrix();
 
@@ -7,6 +7,8 @@ namespace douUI.core {
      * @author wizardc
      */
     export class UIComponentImpl extends dou2d.DisplayObject implements IUIComponent {
+        __interface_type__: "douUI.sys.IUIComponent" = "douUI.sys.IUIComponent";
+
         /**
          * 父类引用
          */

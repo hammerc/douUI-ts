@@ -61,6 +61,8 @@
   ],
   /* 注: 如果有继承关系的, 父类必须排在子类前面 */
   "files": [
+    "src/core/extend.ts",
+
     "src/asset/IAssetAdapter.ts",
     "src/asset/DefaultAssetAdapter.ts",
 
@@ -108,6 +110,12 @@
 
     "src/enum/CollectionEventKind.ts",
     "src/enum/UIKeys.ts",
+    "src/enum/JustifyAlign.ts",
+    "src/enum/ColumnAlign.ts",
+    "src/enum/RowAlign.ts",
+    "src/enum/TileOrientation.ts",
+    "src/enum/Direction.ts",
+    "src/enum/ScrollPolicy.ts",
 
     "src/event/CollectionEvent.ts",
     "src/event/ScrollerThrowEvent.ts",
@@ -116,6 +124,7 @@
 
     "src/layouts/supportClasses/LayoutBase.ts",
     "src/layouts/supportClasses/LinearLayoutBase.ts",
+    "src/layouts/supportClasses/ChildInfo.ts",
     "src/layouts/BasicLayout.ts",
     "src/layouts/HorizontalLayout.ts",
     "src/layouts/VerticalLayout.ts",
@@ -128,5 +137,7 @@
 
     "src/utils/ComponentUtil.ts",
     "src/utils/MatrixUtil.ts",
+
+    "src/Dou.ts"
   ]
 }

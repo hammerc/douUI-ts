@@ -25,7 +25,7 @@ namespace douUI {
                 value = [];
             }
             this._source = value;
-            this.dispatchCollectionEvent(CollectionEvent.COLLECTION_CHANGE, CollectionEventKind.RESET);
+            this.dispatchCollectionEvent(CollectionEvent.COLLECTION_CHANGE, CollectionEventKind.reset);
         }
         public get source(): any[] {
             return this._source;
@@ -44,7 +44,7 @@ namespace douUI {
          */
         public addItem(item: any): void {
             this._source.push(item);
-            this.dispatchCollectionEvent(CollectionEvent.COLLECTION_CHANGE, CollectionEventKind.ADD, this._source.length - 1, -1, [item]);
+            this.dispatchCollectionEvent(CollectionEvent.COLLECTION_CHANGE, CollectionEventKind.add, this._source.length - 1, -1, [item]);
         }
 
         /**
@@ -54,10 +54,10 @@ namespace douUI {
          */
         public addItemAt(item: any, index: number): void {
             if (index < 0 || index > this._source.length) {
-                console.error("An index specified for a parameter was out of range.");
+                console.error(`索引不在范围内`);
             }
             this._source.splice(index, 0, item);
-            this.dispatchCollectionEvent(CollectionEvent.COLLECTION_CHANGE, CollectionEventKind.ADD, index, -1, [item]);
+            this.dispatchCollectionEvent(CollectionEvent.COLLECTION_CHANGE, CollectionEventKind.add, index, -1, [item]);
         }
 
         /**
@@ -87,7 +87,7 @@ namespace douUI {
         public itemUpdated(item: any): void {
             let index = this.getItemIndex(item);
             if (index != -1) {
-                this.dispatchCollectionEvent(CollectionEvent.COLLECTION_CHANGE, CollectionEventKind.UPDATE, index, -1, [item]);
+                this.dispatchCollectionEvent(CollectionEvent.COLLECTION_CHANGE, CollectionEventKind.update, index, -1, [item]);
             }
         }
 
@@ -99,11 +99,11 @@ namespace douUI {
          */
         public replaceItemAt(item: any, index: number): any {
             if (index < 0 || index >= this._source.length) {
-                console.error("An index specified for a parameter was out of range.");
+                console.error(`索引不在范围内`);
                 return;
             }
             let oldItem = this._source.splice(index, 1, item)[0];
-            this.dispatchCollectionEvent(CollectionEvent.COLLECTION_CHANGE, CollectionEventKind.REPLACE, index, -1, [item], [oldItem]);
+            this.dispatchCollectionEvent(CollectionEvent.COLLECTION_CHANGE, CollectionEventKind.replace, index, -1, [item], [oldItem]);
             return oldItem;
         }
 
@@ -137,11 +137,11 @@ namespace douUI {
          */
         public removeItemAt(index: number): any {
             if (index < 0 || index >= this._source.length) {
-                console.error("An index specified for a parameter was out of range.");
+                console.error(`索引不在范围内`);
                 return;
             }
             let item = this._source.splice(index, 1)[0];
-            this.dispatchCollectionEvent(CollectionEvent.COLLECTION_CHANGE, CollectionEventKind.REMOVE, index, -1, [item]);
+            this.dispatchCollectionEvent(CollectionEvent.COLLECTION_CHANGE, CollectionEventKind.remove, index, -1, [item]);
             return item;
         }
 
@@ -151,7 +151,7 @@ namespace douUI {
         public removeAll(): void {
             let items = this._source.concat();
             this._source = [];
-            this.dispatchCollectionEvent(CollectionEvent.COLLECTION_CHANGE, CollectionEventKind.REMOVE, 0, -1, items);
+            this.dispatchCollectionEvent(CollectionEvent.COLLECTION_CHANGE, CollectionEventKind.remove, 0, -1, items);
         }
 
         /**
@@ -159,7 +159,7 @@ namespace douUI {
          * * ArrayCollection 不会自动检原始数据进行了改变, 所以你必须调用该方法去更新显示
          */
         public refresh(): void {
-            this.dispatchCollectionEvent(CollectionEvent.COLLECTION_CHANGE, CollectionEventKind.REFRESH);
+            this.dispatchCollectionEvent(CollectionEvent.COLLECTION_CHANGE, CollectionEventKind.refresh);
         }
     }
 }
