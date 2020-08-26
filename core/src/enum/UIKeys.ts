@@ -1,8 +1,4 @@
 namespace douUI.sys {
-    /**
-     * 组件属性类型
-     * @author wizardc
-     */
     export const enum UIKeys {
         left,
         right,
@@ -37,15 +33,13 @@ namespace douUI.sys {
     }
 
     export const enum ComponentKeys {
-        hostComponentKey,
-        skinName,
-        explicitState,
         enabled,
-        stateIsDirty,
-        skinNameExplicitlySet,
         explicitTouchChildren,
         explicitTouchEnabled,
-        skin
+        skin,
+        skinName,
+        state,
+        stateIsDirty
     }
 
     export const enum GroupKeys {

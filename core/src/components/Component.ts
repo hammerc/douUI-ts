@@ -4,65 +4,31 @@ namespace douUI {
      * @author wizardc
      */
     export abstract class Component extends dou2d.DisplayObjectContainer implements sys.IUIComponent {
-        __interface_type__: "douUI.sys.IUIComponent" = "douUI.sys.IUIComponent";
+        public $Component: Object;
 
         public constructor() {
             super();
             this.initializeUIValues();
             this.$Component = {
-                0: null,         //hostComponentKey,
-                1: null,         //skinName,
-                2: "",           //explicitState,
-                3: true,         //enabled,
-                4: false,        //stateIsDirty,
-                5: false,        //skinNameExplicitlySet,
-                6: true,        //explicitTouchChildren,
-                7: true,        //explicitTouchEnabled
-                8: null          //skin
+                0: true,        // enabled
+                1: true,        // explicitTouchChildren
+                2: true,        // explicitTouchEnabled
+                3: null,        // skin
+                4: null,        // skinName
+                5: "",          // state
+                6: false        // stateIsDirty
             };
             this._touchEnabled = true;
         }
 
-        $Component: Object;
-
-        $setTouchChildren(value: boolean): boolean {
-            value = !!value;
-            let values = this.$Component;
-            values[sys.ComponentKeys.explicitTouchChildren] = value;
-            if (values[sys.ComponentKeys.enabled]) {
-                values[sys.ComponentKeys.explicitTouchChildren] = value;
-                return super.$setTouchChildren(value);
-            }
-            return true;
-        }
-
-        $setTouchEnabled(value: boolean): void {
-            value = !!value;
-            let values = this.$Component;
-            values[sys.ComponentKeys.explicitTouchEnabled] = value;
-            if (values[sys.ComponentKeys.enabled]) {
-                super.$setTouchEnabled(value);
-            }
-        }
-
         /**
-         * 组件是否可以接受用户交互。
-         * 将 enabled 属性设置为 false 后，
-         * 组件会自动禁用触摸事件(将 touchEnabled 和 touchChildren 同时设置为 false)，
-         * 部分组件可能还会将皮肤的视图状态设置为"disabled",使其所有子项的颜色变暗。
+         * 组件是否可以接受用户交互
          */
         public set enabled(value: boolean) {
             value = !!value;
-            this.$setEnabled(value);
-        }
-        public get enabled(): boolean {
-            return this.$Component[sys.ComponentKeys.enabled];
-        }
-
-        $setEnabled(value: boolean): boolean {
             let values = this.$Component;
             if (value === values[sys.ComponentKeys.enabled]) {
-                return false;
+                return;
             }
             values[sys.ComponentKeys.enabled] = value;
             if (value) {
@@ -73,39 +39,138 @@ namespace douUI {
                 this._touchEnabled = false;
                 this._touchChildren = false;
             }
+        }
+        public get enabled(): boolean {
+            return this.$Component[sys.ComponentKeys.enabled];
+        }
+
+        public $setTouchChildren(value: boolean): boolean {
+            value = !!value;
+            let values = this.$Component;
+            values[sys.ComponentKeys.explicitTouchChildren] = value;
+            if (values[sys.ComponentKeys.enabled]) {
+                values[sys.ComponentKeys.explicitTouchChildren] = value;
+                return super.$setTouchChildren(value);
+            }
             return true;
         }
 
+        public $setTouchEnabled(value: boolean): void {
+            value = !!value;
+            let values = this.$Component;
+            values[sys.ComponentKeys.explicitTouchEnabled] = value;
+            if (values[sys.ComponentKeys.enabled]) {
+                super.$setTouchEnabled(value);
+            }
+        }
+
         /**
-         * UIComponentImpl 定义的所有变量请不要添加任何初始值，必须统一在此处初始化。
+         * 当前使用的皮肤
+         */
+        public set skin(value: ISkin) {
+            let values = this.$Component;
+            if (values[sys.ComponentKeys.skin] == value) {
+                return;
+            }
+            let oldSkin = values[sys.ComponentKeys.skin] as ISkin;
+            if (oldSkin) {
+                oldSkin.onUnload();
+            }
+            values[sys.ComponentKeys.skin] = value;
+            if (value) {
+                value.onApply();
+                values[sys.ComponentKeys.stateIsDirty] = true;
+                this.invalidateProperties();
+            }
+        }
+        public get skin(): ISkin {
+            return this.$Component[sys.ComponentKeys.skin];
+        }
+
+        /**
+         * 当前使用的皮肤名称
+         */
+        public set skinName(value: string) {
+            let values = this.$Component;
+            if (values[sys.ComponentKeys.skinName] == value) {
+                return;
+            }
+            if (!value) {
+                return;
+            }
+            values[sys.ComponentKeys.skinName] = value;
+            let skinClass = Theme.getSkin(value);
+            if (!skinClass) {
+                throw new Error(`没有注册对应的皮肤类: ${value}`);
+            }
+            this.skin = new skinClass();
+        }
+        public get skinName(): string {
+            return this.$Component[sys.ComponentKeys.skinName];
+        }
+
+        /**
+         * 当前的状态
+         */
+        public set state(value: string) {
+            let values = this.$Component;
+            if (values[sys.ComponentKeys.state] == value) {
+                return;
+            }
+            values[sys.ComponentKeys.state] = value;
+            values[sys.ComponentKeys.stateIsDirty] = true;
+            this.invalidateProperties();
+        }
+        public get state(): string {
+            return this.$Component[sys.ComponentKeys.state];
+        }
+
+        /**
+         * 设置皮肤风格
+         */
+        public setStyle(name: string, ...args: any[]): void {
+            if (this.skin && typeof this.skin[name] == "function") {
+                this.skin[name].call(this.skin, ...args);
+            }
+        }
+
+        public __interface_type__: "douUI.sys.IUIComponent" = "douUI.sys.IUIComponent";
+
+        public $UIComponent: Object;
+
+        /**
+         * UIComponentImpl 定义的所有变量请不要添加任何初始值, 必须统一在此处初始化
          */
         private initializeUIValues: () => void;
 
-        /**
-         * 子类覆盖此方法可以执行一些初始化子项操作。此方法仅在组件第一次添加到舞台时回调一次。
-         * 请务必调用super.createChildren()以完成父类组件的初始化
-         */
         protected createChildren(): void {
+            let values = this.$Component;
+            if (!values[sys.ComponentKeys.skin]) {
+                let skinClass = Theme.getDefaultSkin(<any>this.constructor);
+                if (!skinClass) {
+                    throw new Error(`没有注册默认的皮肤类: ${this.constructor}`);
+                }
+                this.skin = new skinClass();
+            }
         }
 
-        /**
-         * 创建子对象后执行任何最终处理。此方法在创建 Component 的子类时覆盖。
-         */
         protected childrenCreated(): void {
         }
 
-        /**
-         * 提交属性，子类在调用完invalidateProperties()方法后，应覆盖此方法以应用属性
-         */
         protected commitProperties(): void {
+            sys.UIComponentImpl.prototype["commitProperties"].call(this);
+            let values = this.$Component;
+            if (values[sys.ComponentKeys.stateIsDirty]) {
+                values[sys.ComponentKeys.stateIsDirty] = false;
+                if (values[sys.ComponentKeys.skin]) {
+                    (values[sys.ComponentKeys.skin] as ISkin).setState(values[sys.ComponentKeys.state]);
+                }
+            }
         }
 
-        /**
-         * 测量组件尺寸
-         */
         protected measure(): void {
             sys.measure(this);
-            let skin = this.$Component[sys.ComponentKeys.skin];
+            let skin = this.$Component[sys.ComponentKeys.skin] as ISkin;
             if (!skin) {
                 return;
             }
@@ -134,22 +199,12 @@ namespace douUI {
             }
         }
 
-        /**
-         * 更新显示列表
-         */
         protected updateDisplayList(unscaledWidth: number, unscaledHeight: number): void {
             sys.updateDisplayList(this, unscaledWidth, unscaledHeight);
         }
 
-        /**
-         * 此对象影响其布局时（includeInLayout 为 true），使父代大小和显示列表失效的方法。
-         */
         protected invalidateParentLayout(): void {
         }
-
-        $UIComponent: Object;
-
-        $includeInLayout: boolean;
 
         public includeInLayout: boolean;
 

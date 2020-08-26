@@ -7,7 +7,7 @@ namespace douUI.sys {
      * @author wizardc
      */
     export class UIComponentImpl extends dou2d.DisplayObject implements IUIComponent {
-        __interface_type__: "douUI.sys.IUIComponent" = "douUI.sys.IUIComponent";
+        public __interface_type__: "douUI.sys.IUIComponent" = "douUI.sys.IUIComponent";
 
         /**
          * 父类引用

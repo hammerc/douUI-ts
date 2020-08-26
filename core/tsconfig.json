@@ -93,6 +93,7 @@
     "src/components/Image.ts",
     "src/components/ItemRenderer.ts",
     "src/components/Label.ts",
+    "src/components/RichLabel.ts",
     "src/components/List.ts",
     "src/components/ProgressBar.ts",
     "src/components/RadioButton.ts",
@@ -131,7 +132,7 @@
     "src/layouts/TileLayout.ts",
 
     "src/skin/ISkin.ts",
-    "src/skin/Skin.ts",
+    "src/skin/SkinBase.ts",
 
     "src/theme/Theme.ts",
 
