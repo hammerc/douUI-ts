@@ -466,7 +466,7 @@ namespace douUI.sys {
          * 设置组件的宽高
          * * 此方法不同于直接设置 width, height 属性, 不会影响显式标记尺寸属性
          */
-        private setActualSize(w: number, h: number): void {
+        protected setActualSize(w: number, h: number): void {
             let change = false;
             let values = this.$UIComponent;
             if (values[UIKeys.width] !== w) {
@@ -571,8 +571,8 @@ namespace douUI.sys {
                     let length = children.length;
                     for (let i = 0; i < length; i++) {
                         let child = children[i];
-                        if ("validateSize" in child) {
-                            (<IUIComponent>child).validateSize(true);
+                        if (sys.isIUIComponent(child)) {
+                            child.validateSize(true);
                         }
                     }
                 }
@@ -591,7 +591,7 @@ namespace douUI.sys {
         /**
          * 测量组件尺寸, 返回尺寸是否发生变化
          */
-        private measureSizes(): boolean {
+        protected measureSizes(): boolean {
             let changed = false;
             let values = this.$UIComponent;
             if (!values[UIKeys.invalidateSizeFlag]) {
@@ -689,7 +689,7 @@ namespace douUI.sys {
          */
         protected invalidateParentLayout(): void {
             let parent = this._parent;
-            if (!parent || !this.$includeInLayout || !("invalidateSize" in parent && "invalidateDisplayList" in parent)) {
+            if (!parent || !this.$includeInLayout || !sys.isIUIComponent(parent)) {
                 return;
             }
             (<IUIComponent><any>parent).invalidateSize();

@@ -5,7 +5,7 @@ namespace douUI {
      * @author wizardc
      */
     export class DefaultAssetAdapter implements IAssetAdapter {
-        public getAsset(source: string, callBack: (content: any, source: string) => void, thisObject: any): void {
+        public getAsset(source: string, callBack: (content: any, source: string) => void, thisObject?: any): void {
             if (dou2d.asset.hasRes(source)) {
                 dou2d.asset.loadRes(source, 0, callBack, thisObject);
             }

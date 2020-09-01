@@ -15,7 +15,7 @@ namespace douUI {
                 2: true,        // explicitTouchEnabled
                 3: null,        // skin
                 4: null,        // skinName
-                5: "",          // state
+                5: null,        // explicitState
                 6: false        // stateIsDirty
             };
             this._touchEnabled = true;
@@ -39,6 +39,7 @@ namespace douUI {
                 this._touchEnabled = false;
                 this._touchChildren = false;
             }
+            this.invalidateState();
         }
         public get enabled(): boolean {
             return this.$Component[sys.ComponentKeys.enabled];
@@ -75,10 +76,12 @@ namespace douUI {
             let oldSkin = values[sys.ComponentKeys.skin] as ISkin;
             if (oldSkin) {
                 oldSkin.onUnload();
+                this.onSkinRemoved();
             }
             values[sys.ComponentKeys.skin] = value;
             if (value) {
                 value.onApply();
+                this.onSkinAdded();
                 values[sys.ComponentKeys.stateIsDirty] = true;
                 this.invalidateProperties();
             }
@@ -112,17 +115,33 @@ namespace douUI {
         /**
          * 当前的状态
          */
-        public set state(value: string) {
+        public set currentState(value: string) {
             let values = this.$Component;
-            if (values[sys.ComponentKeys.state] == value) {
+            if (values[sys.ComponentKeys.explicitState] == value) {
                 return;
             }
-            values[sys.ComponentKeys.state] = value;
+            values[sys.ComponentKeys.explicitState] = value;
+            this.invalidateState();
+        }
+        public get currentState(): string {
+            let values = this.$Component;
+            return values[sys.ComponentKeys.explicitState] ? values[sys.ComponentKeys.explicitState] : this.getCurrentState();
+        }
+
+        /**
+         * 标记状态失效
+         */
+        public invalidateState(): void {
+            let values = this.$Component;
+            if (values[sys.ComponentKeys.stateIsDirty]) {
+                return;
+            }
             values[sys.ComponentKeys.stateIsDirty] = true;
             this.invalidateProperties();
         }
-        public get state(): string {
-            return this.$Component[sys.ComponentKeys.state];
+
+        protected getCurrentState(): string {
+            return "";
         }
 
         /**
@@ -132,6 +151,18 @@ namespace douUI {
             if (this.skin && typeof this.skin[name] == "function") {
                 this.skin[name].call(this.skin, ...args);
             }
+        }
+
+        /**
+         * 皮肤添加成功后调用
+         */
+        protected onSkinAdded(): void {
+        }
+
+        /**
+         * 皮肤移除成功后调用
+         */
+        protected onSkinRemoved(): void {
         }
 
         public __interface_type__: "douUI.sys.IUIComponent" = "douUI.sys.IUIComponent";
@@ -163,7 +194,7 @@ namespace douUI {
             if (values[sys.ComponentKeys.stateIsDirty]) {
                 values[sys.ComponentKeys.stateIsDirty] = false;
                 if (values[sys.ComponentKeys.skin]) {
-                    (values[sys.ComponentKeys.skin] as ISkin).setState(values[sys.ComponentKeys.state]);
+                    (values[sys.ComponentKeys.skin] as ISkin).setState(this.currentState);
                 }
             }
         }

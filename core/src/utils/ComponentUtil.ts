@@ -68,7 +68,7 @@ namespace douUI.sys {
     /**
      * 检测指定对象是否实现了 IUIComponent 接口
      */
-    export function isIUIComponent(obj: any): boolean {
+    export function isIUIComponent(obj: any): obj is IUIComponent {
         return obj.__interface_type__ === "douUI.sys.IUIComponent";
     }
 

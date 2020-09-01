@@ -71,6 +71,7 @@ declare namespace dou {
         protected _frameRate: number;
         protected _frameCount: number;
         protected _lastCount: number;
+        protected _immediateUpdate: boolean;
         protected _lastTimeStamp: number;
         protected _paused: boolean;
         constructor();
@@ -85,6 +86,10 @@ declare namespace dou {
          */
         get paused(): boolean;
         protected setFrameRate(value: number): void;
+        /**
+         * 请求立即刷新
+         */
+        requestImmediateUpdate(): void;
         /**
          * 暂停计时器
          */
@@ -221,7 +226,7 @@ declare namespace dou {
      */
     interface IAnalyzer {
         load(url: string, callback: (url: string, data: any) => void, thisObj: any): void;
-        release(data: any): boolean;
+        release(url: string, data: any): boolean;
     }
 }
 declare namespace dou {
@@ -233,7 +238,7 @@ declare namespace dou {
         protected abstract getResponseType(): HttpResponseType;
         protected abstract dataAnalyze(data: any): any;
         load(url: string, callback: (url: string, data: any) => void, thisObj: any): void;
-        release(data: any): boolean;
+        release(url: string, data: any): boolean;
     }
 }
 declare namespace dou {
@@ -273,7 +278,7 @@ declare namespace dou {
      */
     class SoundAnalyzer implements IAnalyzer {
         load(url: string, callback: (url: string, data: any) => void, thisObj: any): void;
-        release(data: Sound): boolean;
+        release(url: string, data: Sound): boolean;
     }
 }
 declare namespace dou {

@@ -4,6 +4,6 @@ namespace douUI {
      * @author wizardc
      */
     export interface IAssetAdapter {
-        getAsset(source: string, callBack: (content: any, source: string) => void, thisObject: any): void;
+        getAsset(source: string, callBack: (content: any, source: string) => void, thisObject?: any): void;
     }
 }

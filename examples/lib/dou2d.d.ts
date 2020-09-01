@@ -379,6 +379,10 @@ declare namespace dou2d {
 }
 declare namespace dou2d.sys {
     /**
+     * 心跳计时器回调, 返回 true 表示立即刷新显示列表
+     */
+    type TickCallBack = (passedTime: number) => boolean;
+    /**
      * 心跳计时器
      * @author wizardc
      */
@@ -388,13 +392,13 @@ declare namespace dou2d.sys {
         /**
          * 添加自定义心跳计时器
          */
-        startTick(method: (passedTime: number) => void, thisObj: any): void;
+        startTick(method: TickCallBack, thisObj: any): void;
         private getTickIndex;
         private concatTick;
         /**
          * 移除自定义心跳计时器
          */
-        stopTick(method: (passedTime: number) => void, thisObj: any): void;
+        stopTick(method: TickCallBack, thisObj: any): void;
         updateLogic(passedTime: number): void;
         private broadcastDelay;
         private broadcastTick;
@@ -466,6 +470,10 @@ declare namespace dou2d {
         isLoaded(source: string): boolean;
         private getItem;
         private getRealPath;
+        /**
+         * 获取实际的资源地址
+         */
+        getUrl(source: string): string;
         /**
          * 加载资源
          */
@@ -540,6 +548,8 @@ declare namespace dou2d {
         binary = "binary",
         image = "image",
         sheet = "sheet",
+        font = "font",
+        ttf = "ttf",
         sound = "sound"
     }
 }
@@ -1992,7 +2002,6 @@ declare namespace dou2d {
         static TOUCH_BEGIN: string;
         static TOUCH_MOVE: string;
         static TOUCH_END: string;
-        static TOUCH_CANCEL: string;
         static TOUCH_TAP: string;
         static TOUCH_RELEASE_OUTSIDE: string;
         private _touchPointID;
@@ -2011,7 +2020,34 @@ declare namespace dou2d {
         $initTouchEvent(type: string, stageX: number, stageY: number, touchPointID?: number, touchDown?: boolean, bubbles?: boolean, cancelable?: boolean): void;
         $setTarget(target: dou.IEventDispatcher): void;
         private getLocalPosition;
+        /**
+         * 请求忽略帧率立即刷新显示列表
+         */
+        updateAfterEvent(): void;
         onRecycle(): void;
+    }
+}
+declare module dou {
+    interface EventDispatcher {
+        /**
+         * 抛出计时器事件
+         */
+        dispatchTimerEvent(type: string, cancelable?: boolean): boolean;
+    }
+}
+declare namespace dou2d {
+    /**
+     * 计时器事件
+     * @author wizardc
+     */
+    class TimerEvent extends dou.Event {
+        static TIMER: string;
+        static TIMER_COMPLETE: string;
+        $initTimerEvent(type: string, cancelable?: boolean): void;
+        /**
+         * 请求忽略帧率立即刷新显示列表
+         */
+        updateAfterEvent(): void;
     }
 }
 declare module dou {
@@ -2304,7 +2340,7 @@ declare namespace dou2d {
     class ImageAnalyzer implements dou.IAnalyzer {
         load(url: string, callback: (url: string, data: any) => void, thisObj: any): void;
         private createTexture;
-        release(data: Texture): boolean;
+        release(url: string, data: Texture): boolean;
     }
 }
 declare namespace dou2d {
@@ -2315,7 +2351,28 @@ declare namespace dou2d {
     class SheetAnalyzer implements dou.IAnalyzer {
         load(url: string, callback: (url: string, data: any) => void, thisObj: any): void;
         private createSheet;
-        release(data: SpriteSheet): boolean;
+        release(url: string, data: SpriteSheet): boolean;
+    }
+}
+declare namespace dou2d {
+    /**
+     * 位图字体加载器
+     * @author wizardc
+     */
+    class FontAnalyzer implements dou.IAnalyzer {
+        load(url: string, callback: (url: string, data: any) => void, thisObj: any): void;
+        private createFont;
+        release(url: string, data: BitmapFont): boolean;
+    }
+}
+declare namespace dou2d {
+    /**
+     * TrueTypeFont 字体加载器
+     * @author wizardc
+     */
+    class TTFAnalyzer implements dou.IAnalyzer {
+        load(url: string, callback: (url: string, data: any) => void, thisObj: any): void;
+        release(url: string, data: dou.ByteArray): boolean;
     }
 }
 declare namespace dou2d {
@@ -4034,7 +4091,8 @@ declare namespace dou2d.input {
         private _styleInfoes;
         setTextField(textfield: TextField): boolean;
         addToStage(): void;
-        show(): void;
+        show(active?: boolean): void;
+        activeShowKeyboard(): void;
         private initElement;
         setText(value: string): boolean;
         getText(): string;
@@ -4077,13 +4135,15 @@ declare namespace dou2d.input {
         private focusHandler;
         private blurHandler;
         private onMouseDownHandler;
-        onFocus(): void;
+        private onMouseMoveHandler;
+        onFocus(active?: boolean): void;
         private onStageDownHandler;
         private updateTextHandler;
         private resetText;
         updateProperties(): void;
         private updateInput;
         hideInput(): void;
+        removeInput(): void;
         removeStageText(): void;
     }
 }
@@ -4097,6 +4157,7 @@ declare namespace dou2d.input {
         needShow: boolean;
         scaleX: number;
         scaleY: number;
+        finishUserTyping: Function;
         private _stageText;
         private _simpleElement;
         private _multiElement;
@@ -4107,12 +4168,15 @@ declare namespace dou2d.input {
         isCurrentStageText(stageText: any): boolean;
         private initValue;
         initStageDelegateDiv(container: any, canvas: any): any;
+        private stageTextClickHandler;
         private initInputElement;
         updateSize(): void;
         show(): void;
         getInputElement(stageText: HtmlText): any;
         disconnectStageText(stageText: HtmlText): void;
         clearInputElement(): void;
+        blurInputElement(): void;
+        disposeInputElement(): void;
     }
 }
 declare namespace dou2d {
@@ -4519,7 +4583,7 @@ declare namespace dou2d {
                 offY: number;
                 sourceW: number;
                 sourceH: number;
-                xadvance: number;
+                xadvance?: number;
             };
         });
         getTexture(name: string): Texture;
@@ -4635,6 +4699,20 @@ declare namespace dou2d {
          * 解析 HTML 格式文本
          */
         function parse(htmltext: string): ITextElement[];
+    }
+}
+declare namespace dou2d {
+    /**
+     * 注册字体
+     * * **注意调用该方法前需要提前加载完成字体文件**
+     * @param name 字体名称, 设置到 fontFamily 属性上
+     * @param path 字体文件的完整路径
+     */
+    function registerFontMapping(name: string, path: string): void;
+    namespace sys {
+        let fontResMap: {
+            [name: string]: ArrayBuffer;
+        };
     }
 }
 declare namespace dou2d.touch {
@@ -4961,6 +5039,52 @@ declare namespace dou2d {
         let deltaTime: number;
         let fixedDeltaTime: number;
         let fixedPassedTime: number;
+    }
+}
+declare namespace dou2d {
+    /**
+     * 计时器
+     * @author wizardc
+     */
+    class Timer extends dou.EventDispatcher {
+        private _delay;
+        private _repeatCount;
+        private _currentCount;
+        private _running;
+        private _updateInterval;
+        private _lastCount;
+        private _lastTimeStamp;
+        constructor(delay: number, repeatCount?: number);
+        /**
+         * 计时器间的延迟
+         */
+        set delay(value: number);
+        get delay(): number;
+        /**
+         * 执行总次数
+         */
+        get repeatCount(): number;
+        /**
+         * 当前执行的次数
+         */
+        get currentCount(): number;
+        /**
+         * 当前是否正在执行
+         */
+        get running(): boolean;
+        /**
+         * 启动计时器
+         */
+        start(): void;
+        private update;
+        /**
+         * 停止计时器
+         */
+        stop(): void;
+        /**
+         * 停止计时器, 并重置执行次数
+         */
+        reset(): void;
     }
 }
 declare namespace dou2d {

@@ -5,7 +5,8 @@ namespace douUI {
      */
     export class Group extends dou2d.DisplayObjectContainer implements IViewport {
         public $Group: Object;
-        public $layout: LayoutBase;
+
+        protected _layout: LayoutBase;
 
         public constructor() {
             super();
@@ -41,13 +42,13 @@ namespace douUI {
          * 此容器的布局对象
          */
         public set layout(value: LayoutBase) {
-            if (this.$layout == value) {
+            if (this._layout == value) {
                 return;
             }
-            if (this.$layout) {
-                this.$layout.target = null;
+            if (this._layout) {
+                this._layout.target = null;
             }
-            this.$layout = value;
+            this._layout = value;
             if (value) {
                 value.target = this;
             }
@@ -55,7 +56,7 @@ namespace douUI {
             this.invalidateDisplayList();
         }
         public get layout(): LayoutBase {
-            return this.$layout;
+            return this._layout;
         }
 
         /**
@@ -84,8 +85,8 @@ namespace douUI {
                 return;
             }
             values[sys.GroupKeys.scrollH] = value;
-            if (this.updateScrollRect() && this.$layout) {
-                this.$layout.scrollPositionChanged();
+            if (this.updateScrollRect() && this._layout) {
+                this._layout.scrollPositionChanged();
             }
             this.dispatchEvent(dou.Event.PROPERTY_CHANGE, "scrollH");
         }
@@ -103,8 +104,8 @@ namespace douUI {
                 return;
             }
             values[sys.GroupKeys.scrollV] = value;
-            if (this.updateScrollRect() && this.$layout) {
-                this.$layout.scrollPositionChanged();
+            if (this.updateScrollRect() && this._layout) {
+                this._layout.scrollPositionChanged();
             }
             this.dispatchEvent(dou.Event.PROPERTY_CHANGE, "scrollV");
         }
@@ -221,7 +222,7 @@ namespace douUI {
         private initializeUIValues: () => void;
 
         protected createChildren(): void {
-            if (!this.$layout) {
+            if (!this._layout) {
                 this.layout = new BasicLayout();
             }
         }
@@ -233,16 +234,16 @@ namespace douUI {
         }
 
         protected measure(): void {
-            if (!this.$layout) {
+            if (!this._layout) {
                 this.setMeasuredSize(0, 0);
                 return;
             }
-            this.$layout.measure();
+            this._layout.measure();
         }
 
         protected updateDisplayList(unscaledWidth: number, unscaledHeight: number): void {
-            if (this.$layout) {
-                this.$layout.updateDisplayList(unscaledWidth, unscaledHeight);
+            if (this._layout) {
+                this._layout.updateDisplayList(unscaledWidth, unscaledHeight);
             }
             this.updateScrollRect();
         }

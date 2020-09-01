@@ -3,7 +3,7 @@ namespace douUI {
      * 列表类组件的项呈示器接口
      * @author wizardc
      */
-    export interface IItemRenderer {
+    export interface IItemRenderer extends Component {
         /**
          * 要呈示或编辑的数据
          */
