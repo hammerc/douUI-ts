@@ -1,5 +1,7 @@
 (function (Dou) {
 
+    Dou.sys = Dou.sys || {};
+
     Dou.DefaultAssetAdapter = douUI.DefaultAssetAdapter;
     Dou.getAsset = douUI.getAsset;
 
@@ -56,21 +58,14 @@
 
     Dou.SkinBase = douUI.SkinBase;
 
-    Dou.Theme.registerDefaultSkin = douUI.Theme.registerDefaultSkin;
-    Dou.Theme.getDefaultSkin = douUI.Theme.getDefaultSkin;
-    Dou.Theme.registerSkin = douUI.Theme.registerSkin;
-    Dou.Theme.getSkin = douUI.Theme.getSkin;
+    Dou.Theme = douUI.Theme;
 
     Dou.sys.implementUIComponent = douUI.sys.implementUIComponent;
     Dou.sys.mixin = douUI.sys.mixin;
     Dou.sys.isIUIComponent = douUI.sys.isIUIComponent;
     Dou.sys.measure = douUI.sys.measure;
     Dou.sys.updateDisplayList = douUI.sys.updateDisplayList;
-    Dou.sys.MatrixUtil.isDeltaIdentity = douUI.sys.MatrixUtil.isDeltaIdentity;
-    Dou.sys.MatrixUtil.fitBounds = douUI.sys.MatrixUtil.fitBounds;
-    Dou.TreeUtil.getTree = douUI.TreeUtil.getTree;
-    Dou.TreeUtil.forEach = douUI.TreeUtil.forEach;
-    Dou.TreeUtil.getTreeData = douUI.TreeUtil.getTreeData;
-    Dou.TreeUtil.expand = douUI.TreeUtil.expand;
+    Dou.sys.MatrixUtil = douUI.sys.MatrixUtil;
+    Dou.TreeUtil = douUI.TreeUtil;
 
 })((<any>window).Dou || ((<any>window).Dou = {}));
