@@ -17,7 +17,7 @@ namespace douUI {
         /**
          * 虚拟布局使用的尺寸缓存
          */
-        protected _elementSizeTable: number[] = [];
+        protected _elementSizeTable: number[];
 
         /**
          * 虚拟布局使用的当前视图中的第一个元素索引
@@ -38,6 +38,11 @@ namespace douUI {
          * 子元素最大的尺寸
          */
         protected _maxElementSize: number = 0;
+
+        public constructor() {
+            super();
+            this._elementSizeTable = [];
+        }
 
         /**
          * 布局元素的水平对齐策略

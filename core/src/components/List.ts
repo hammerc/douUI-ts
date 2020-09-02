@@ -5,8 +5,13 @@ namespace douUI {
      */
     export class List extends ListBase {
         private _allowMultipleSelection: boolean = false;
-        private _selectedIndices: number[] = [];
+        private _selectedIndices: number[];
         private _proposedSelectedIndices: number[];
+
+        public constructor() {
+            super();
+            this._selectedIndices = [];
+        }
 
         public set selectedIndex(value: number) {
             this.setSelectedIndex(value);

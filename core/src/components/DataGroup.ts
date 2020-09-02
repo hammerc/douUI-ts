@@ -9,7 +9,7 @@ namespace douUI {
         protected _dataProviderChanged: boolean = false;
         protected _dataProvider: ICollection;
 
-        protected _indexToRenderer: IItemRenderer[] = [];
+        protected _indexToRenderer: IItemRenderer[];
 
         public constructor() {
             super();
@@ -27,6 +27,7 @@ namespace douUI {
                 10: false,      // renderersBeingUpdated
                 11: null        // typicalItem
             };
+            this._indexToRenderer = [];
         }
 
         public set layout(value: LayoutBase) {

@@ -3,14 +3,14 @@ declare module dou {
         /**
          * 抛出列表项触碰事件
          */
-        dispatchItemTapEvent(type: string, itemRenderer?: IItemRenderer): boolean;
+        dispatchItemTapEvent(type: string, itemRenderer?: douUI.IItemRenderer): boolean;
     }
 }
 
 (function () {
     Object.defineProperties(dou.EventDispatcher.prototype, {
         dispatchItemTapEvent: {
-            value: function (type: string, itemRenderer?: IItemRenderer): boolean {
+            value: function (type: string, itemRenderer?: douUI.IItemRenderer): boolean {
                 let event = dou.recyclable(douUI.ItemTapEvent);
                 event.$initItemTapEvent(type, itemRenderer);
                 let result = this.dispatch(event);

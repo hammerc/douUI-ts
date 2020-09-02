@@ -75,6 +75,7 @@
     "src/core/UIComponentImpl.ts",
     "src/core/IViewport.ts",
     "src/core/IItemRenderer.ts",
+    "src/core/ITreeDataCollection.ts",
 
     "src/components/Component.ts",
 
@@ -121,7 +122,6 @@
     "src/enum/ScrollPolicy.ts",
 
     "src/event/CollectionEvent.ts",
-    "src/event/ScrollerThrowEvent.ts",
     "src/event/ItemTapEvent.ts",
     "src/event/UIEvent.ts",
 
@@ -140,6 +140,7 @@
 
     "src/utils/ComponentUtil.ts",
     "src/utils/MatrixUtil.ts",
+    "src/utils/TreeUtil.ts",
 
     "src/Dou.ts"
   ]

@@ -8,6 +8,7 @@ declare module dou {
 declare module dou2d {
     module Event2D {
         const ITEM_TAP: string;
+        const RICH_TEXT_CHANGE: string;
     }
 
     module TouchEvent {
@@ -27,6 +28,7 @@ declare module dou2d {
 
     f = dou2d.Event2D;
     f.ITEM_TAP = "itemTap";
+    f.RICH_TEXT_CHANGE = "richTextChange";
 
     f = dou2d.TouchEvent;
     f.TOUCH_CANCEL = "touchCancel";

@@ -9,7 +9,7 @@ namespace douUI {
         public $name: string;
         public $enabled: boolean = true;
 
-        private _radioButtons: RadioButton[] = [];
+        private _radioButtons: RadioButton[];
 
         private _selectedValue: any;
         private _selection: RadioButton;
@@ -17,6 +17,7 @@ namespace douUI {
         public constructor(name?: string) {
             super();
             this.$name = name || "_radioButtonGroup" + groupCount++;
+            this._radioButtons = [];
         }
 
         public set enabled(value: boolean) {

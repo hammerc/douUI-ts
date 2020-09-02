@@ -14,7 +14,7 @@ namespace douUI.sys {
         private _endFunction: () => void;
 
         private _velocity: number;
-        private _previousVelocity: number[] = [];
+        private _previousVelocity: number[];
 
         private _currentPosition: number;
         private _previousPosition: number;
@@ -32,6 +32,7 @@ namespace douUI.sys {
             this._updateFunction = updateFunction;
             this._endFunction = endFunction;
             this._target = target;
+            this._previousVelocity = [];
             this._animation = new sys.Animation(this.onScrollingUpdate, this.finishScrolling, this);
         }
 

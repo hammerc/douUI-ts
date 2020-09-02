@@ -247,7 +247,7 @@ namespace douUI.sys {
         /**
          * 深度队列
          */
-        private depthBins: { [key: number]: DepthBin } = {};
+        private depthBins: { [key: number]: DepthBin };
 
         /**
          * 最小深度
@@ -258,6 +258,10 @@ namespace douUI.sys {
          * 最大深度
          */
         private maxDepth: number = -1;
+
+        public constructor() {
+            this.depthBins = {};
+        }
 
         /**
          * 插入一个元素
@@ -439,9 +443,14 @@ namespace douUI.sys {
      * @author wizardc
      */
     class DepthBin {
-        public map: Map<IUIComponent, boolean> = new Map();
-        public items: IUIComponent[] = [];
+        public map: Map<IUIComponent, boolean>;
+        public items: IUIComponent[];
         public length: number = 0;
+
+        public constructor() {
+            this.map = new Map();
+            this.items = [];
+        }
 
         public insert(client: IUIComponent): void {
             if (this.map.has(client)) {
