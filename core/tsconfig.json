@@ -63,6 +63,8 @@
   "files": [
     "src/core/extend.ts",
 
+    "src/utils/ComponentUtil.ts",
+
     "src/asset/IAssetAdapter.ts",
     "src/asset/DefaultAssetAdapter.ts",
     "src/asset/getAsset.ts",
@@ -138,7 +140,6 @@
 
     "src/theme/Theme.ts",
 
-    "src/utils/ComponentUtil.ts",
     "src/utils/MatrixUtil.ts",
     "src/utils/TreeUtil.ts",
 

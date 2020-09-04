@@ -15,8 +15,10 @@ namespace douUI {
                 2: true,        // explicitTouchEnabled
                 3: null,        // skin
                 4: null,        // skinName
-                5: null,        // explicitState
-                6: false        // stateIsDirty
+                5: false,       // skinIsDirty
+                6: null,        // explicitState
+                7: false,       // stateIsDirty
+                8: []           // skinStyle
             };
             this._touchEnabled = true;
         }
@@ -80,8 +82,14 @@ namespace douUI {
             }
             values[sys.ComponentKeys.skin] = value;
             if (value) {
-                value.onApply();
-                this.onSkinAdded();
+                if (this._stage) {
+                    value.onCreateSkin();
+                    value.onApply();
+                    this.onSkinAdded();
+                }
+                else {
+                    values[sys.ComponentKeys.skinIsDirty] = true;
+                }
                 values[sys.ComponentKeys.stateIsDirty] = true;
                 this.invalidateProperties();
             }
@@ -146,10 +154,18 @@ namespace douUI {
 
         /**
          * 设置皮肤风格
+         * * 仅对当前使用的皮肤有效, 皮肤更换后需要重新调用
          */
         public setStyle(name: string, ...args: any[]): void {
-            if (this.skin && typeof this.skin[name] == "function") {
-                this.skin[name].call(this.skin, ...args);
+            if (!this.$UIComponent[sys.UIKeys.initialized]) {
+                let values = this.$Component;
+                let styleList = values[sys.ComponentKeys.skinStyle] as Array<any>;
+                styleList.push([name, args]);
+            }
+            else {
+                if (this.skin && typeof this.skin[name] == "function") {
+                    this.skin[name].call(this.skin, ...args);
+                }
             }
         }
 
@@ -172,7 +188,8 @@ namespace douUI {
         /**
          * UIComponentImpl 定义的所有变量请不要添加任何初始值, 必须统一在此处初始化
          */
-        private initializeUIValues: () => void;
+        private initializeUIValues(): void {
+        }
 
         protected createChildren(): void {
             let values = this.$Component;
@@ -181,7 +198,21 @@ namespace douUI {
                 if (!skinClass) {
                     throw new Error(`没有注册默认的皮肤类: ${this.constructor}`);
                 }
-                this.skin = new skinClass();
+                this.skin = new skinClass(this);
+            }
+            if (values[sys.ComponentKeys.skinIsDirty]) {
+                values[sys.ComponentKeys.skinIsDirty] = false;
+                let skin = this.skin;
+                skin.onCreateSkin();
+                skin.onApply();
+                this.onSkinAdded();
+            }
+            let styleList = values[sys.ComponentKeys.skinStyle] as Array<any>;
+            if (styleList.length > 0) {
+                for (let style of styleList) {
+                    this.skin[style[0]].call(this.skin, ...style[1]);
+                }
+                styleList.length = 0;
             }
         }
 
@@ -191,6 +222,13 @@ namespace douUI {
         protected commitProperties(): void {
             sys.UIComponentImpl.prototype["commitProperties"].call(this);
             let values = this.$Component;
+            if (values[sys.ComponentKeys.skinIsDirty]) {
+                values[sys.ComponentKeys.skinIsDirty] = false;
+                let skin = this.skin;
+                skin.onCreateSkin();
+                skin.onApply();
+                this.onSkinAdded();
+            }
             if (values[sys.ComponentKeys.stateIsDirty]) {
                 values[sys.ComponentKeys.stateIsDirty] = false;
                 if (values[sys.ComponentKeys.skin]) {

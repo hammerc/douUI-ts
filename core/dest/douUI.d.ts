@@ -16,6 +16,36 @@ declare module dou2d {
         const TOUCH_CANCEL: string;
     }
 }
+declare namespace douUI.sys {
+    /**
+     * 自定义类实现 IUIComponent 的步骤:
+     * 1. 在自定义类的构造函数里调用: this.initializeUIValues();
+     * 2. 拷贝 IUIComponent 接口定义的所有内容 (包括注释掉的 protected 函数) 到自定义类, 将所有子类需要覆盖的方法都声明为空方法体
+     * 3. 在定义类结尾的外部调用 implementUIComponent(), 并传入自定义类
+     * 4. 若覆盖了某个 IUIComponent 的方法, 需要手动调用 UIComponentImpl.prototype["方法名"].call(this);
+     * @param descendant 自定义的 IUIComponent 子类
+     * @param base 自定义子类继承的父类
+     */
+    function implementUIComponent(descendant: any, base: any, isContainer?: boolean): void;
+    /**
+     * 拷贝模板类的方法体和属性到目标类上
+     * @param target 目标类
+     * @param template 模板类
+     */
+    function mixin(target: any, template: any): void;
+    /**
+     * 检测指定对象是否实现了 IUIComponent 接口
+     */
+    function isIUIComponent(obj: any): obj is IUIComponent;
+    /**
+     * 使用 BasicLayout 规则测量目标对象
+     */
+    function measure(target: Group | Component): void;
+    /**
+     * 使用 BasicLayout 规则布局目标对象
+     */
+    function updateDisplayList(target: Group | Component, unscaledWidth: number, unscaledHeight: number): dou.Recyclable<dou2d.Point>;
+}
 declare namespace douUI {
     /**
      * 资源加载接口
@@ -663,6 +693,7 @@ declare namespace douUI {
         protected getCurrentState(): string;
         /**
          * 设置皮肤风格
+         * * 仅对当前使用的皮肤有效, 皮肤更换后需要重新调用
          */
         setStyle(name: string, ...args: any[]): void;
         /**
@@ -2055,8 +2086,10 @@ declare namespace douUI.sys {
         explicitTouchEnabled = 2,
         skin = 3,
         skinName = 4,
-        explicitState = 5,
-        stateIsDirty = 6
+        skinIsDirty = 5,
+        explicitState = 6,
+        stateIsDirty = 7,
+        skinStyle = 8
     }
     const enum GroupKeys {
         contentWidth = 0,
@@ -2756,6 +2789,10 @@ declare namespace douUI {
         readonly minHeight: number;
         readonly maxHeight: number;
         /**
+         * 创建皮肤子项
+         */
+        onCreateSkin(): void;
+        /**
          * 应用当前皮肤
          */
         onApply(): void;
@@ -2775,14 +2812,15 @@ declare namespace douUI {
      * @author wizardc
      */
     abstract class SkinBase implements ISkin {
-        protected _target: sys.IUIComponent;
+        protected _target: Component;
         protected _width: number;
         protected _minWidth: number;
         protected _maxWidth: number;
         protected _height: number;
         protected _minHeight: number;
         protected _maxHeight: number;
-        constructor(target: sys.IUIComponent, size?: {
+        protected _skinCreated: boolean;
+        constructor(target: Component, size?: {
             width?: number;
             minWidth?: number;
             maxWidth?: number;
@@ -2800,8 +2838,12 @@ declare namespace douUI {
          * 将特定的实例绑定到目标对象的指定属性上
          */
         protected bindToTarget(attributeName: string, instance: dou2d.DisplayObject): void;
-        abstract onApply(): void;
-        abstract onUnload(): void;
+        onCreateSkin(): void;
+        protected abstract createSkin(): void;
+        onApply(): void;
+        protected abstract apply(): void;
+        onUnload(): void;
+        protected abstract unload(): void;
         setState(state: string): void;
     }
 }
@@ -2817,7 +2859,7 @@ declare namespace douUI {
         function registerDefaultSkin(component: {
             new (): Component;
         }, skinClass: {
-            new (): ISkin;
+            new (...args: any[]): ISkin;
         }): void;
         /**
          * 获取指定组件的默认皮肤类
@@ -2825,51 +2867,21 @@ declare namespace douUI {
         function getDefaultSkin(component: {
             new (): Component;
         }): {
-            new (): ISkin;
+            new (...args: any[]): ISkin;
         };
         /**
          * 注册皮肤别名
          */
         function registerSkin(skinName: string, skinClass: {
-            new (): ISkin;
+            new (...args: any[]): ISkin;
         }): void;
         /**
          * 获取指定组件的皮肤类
          */
         function getSkin(skinName: string): {
-            new (): ISkin;
+            new (...args: any[]): ISkin;
         };
     }
-}
-declare namespace douUI.sys {
-    /**
-     * 自定义类实现 IUIComponent 的步骤:
-     * 1. 在自定义类的构造函数里调用: this.initializeUIValues();
-     * 2. 拷贝 IUIComponent 接口定义的所有内容 (包括注释掉的 protected 函数) 到自定义类, 将所有子类需要覆盖的方法都声明为空方法体
-     * 3. 在定义类结尾的外部调用 implementUIComponent(), 并传入自定义类
-     * 4. 若覆盖了某个 IUIComponent 的方法, 需要手动调用 UIComponentImpl.prototype["方法名"].call(this);
-     * @param descendant 自定义的 IUIComponent 子类
-     * @param base 自定义子类继承的父类
-     */
-    function implementUIComponent(descendant: any, base: any, isContainer?: boolean): void;
-    /**
-     * 拷贝模板类的方法体和属性到目标类上
-     * @param target 目标类
-     * @param template 模板类
-     */
-    function mixin(target: any, template: any): void;
-    /**
-     * 检测指定对象是否实现了 IUIComponent 接口
-     */
-    function isIUIComponent(obj: any): obj is IUIComponent;
-    /**
-     * 使用 BasicLayout 规则测量目标对象
-     */
-    function measure(target: Group | Component): void;
-    /**
-     * 使用 BasicLayout 规则布局目标对象
-     */
-    function updateDisplayList(target: Group | Component, unscaledWidth: number, unscaledHeight: number): dou.Recyclable<dou2d.Point>;
 }
 declare namespace douUI.sys {
     /**

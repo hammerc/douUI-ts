@@ -219,7 +219,8 @@ namespace douUI {
         /**
          * UIComponentImpl 定义的所有变量请不要添加任何初始值, 必须统一在此处初始化
          */
-        private initializeUIValues: () => void;
+        private initializeUIValues(): void {
+        }
 
         protected createChildren(): void {
             if (!this._layout) {

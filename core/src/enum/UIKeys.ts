@@ -38,8 +38,10 @@ namespace douUI.sys {
         explicitTouchEnabled,
         skin,
         skinName,
+        skinIsDirty,
         explicitState,
-        stateIsDirty
+        stateIsDirty,
+        skinStyle
     }
 
     export const enum GroupKeys {

@@ -37,7 +37,7 @@ namespace douUI.sys {
         }
         let prototype = target.prototype;
         let protoBase = template.prototype;
-        let keys = Object.keys(protoBase);
+        let keys = Object.getOwnPropertyNames(protoBase);
         let length = keys.length;
         for (let i = 0; i < length; i++) {
             let key = keys[i];

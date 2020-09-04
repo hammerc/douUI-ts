@@ -13,6 +13,11 @@ namespace douUI {
         readonly maxHeight: number;
 
         /**
+         * 创建皮肤子项
+         */
+        onCreateSkin(): void;
+
+        /**
          * 应用当前皮肤
          */
         onApply(): void;

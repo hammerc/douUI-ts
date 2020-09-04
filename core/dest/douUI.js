@@ -11,6 +11,234 @@
 })();
 var douUI;
 (function (douUI) {
+    var sys;
+    (function (sys) {
+        /**
+         * 自定义类实现 IUIComponent 的步骤:
+         * 1. 在自定义类的构造函数里调用: this.initializeUIValues();
+         * 2. 拷贝 IUIComponent 接口定义的所有内容 (包括注释掉的 protected 函数) 到自定义类, 将所有子类需要覆盖的方法都声明为空方法体
+         * 3. 在定义类结尾的外部调用 implementUIComponent(), 并传入自定义类
+         * 4. 若覆盖了某个 IUIComponent 的方法, 需要手动调用 UIComponentImpl.prototype["方法名"].call(this);
+         * @param descendant 自定义的 IUIComponent 子类
+         * @param base 自定义子类继承的父类
+         */
+        function implementUIComponent(descendant, base, isContainer) {
+            mixin(descendant, douUI.sys.UIComponentImpl);
+            let prototype = descendant.prototype;
+            prototype.$super = base.prototype;
+            if (isContainer) {
+                prototype.$childAdded = function (child, index) {
+                    this.invalidateSize();
+                    this.invalidateDisplayList();
+                };
+                prototype.$childRemoved = function (child, index) {
+                    this.invalidateSize();
+                    this.invalidateDisplayList();
+                };
+            }
+        }
+        sys.implementUIComponent = implementUIComponent;
+        /**
+         * 拷贝模板类的方法体和属性到目标类上
+         * @param target 目标类
+         * @param template 模板类
+         */
+        function mixin(target, template) {
+            for (let property in template) {
+                if (property != "prototype" && template.hasOwnProperty(property)) {
+                    target[property] = template[property];
+                }
+            }
+            let prototype = target.prototype;
+            let protoBase = template.prototype;
+            let keys = Object.getOwnPropertyNames(protoBase);
+            let length = keys.length;
+            for (let i = 0; i < length; i++) {
+                let key = keys[i];
+                if (key == "__meta__") {
+                    continue;
+                }
+                if (!prototype.hasOwnProperty(key) || isEmptyFunction(prototype, key)) {
+                    let value = Object.getOwnPropertyDescriptor(protoBase, key);
+                    Object.defineProperty(prototype, key, value);
+                }
+            }
+        }
+        sys.mixin = mixin;
+        /**
+         * 检查一个函数的方法体是否为空
+         */
+        function isEmptyFunction(prototype, key) {
+            if (typeof prototype[key] != "function") {
+                return false;
+            }
+            let body = prototype[key].toString();
+            let index = body.indexOf("{");
+            let lastIndex = body.lastIndexOf("}");
+            body = body.substring(index + 1, lastIndex);
+            return body.trim() == "";
+        }
+        /**
+         * 检测指定对象是否实现了 IUIComponent 接口
+         */
+        function isIUIComponent(obj) {
+            return obj.__interface_type__ === "douUI.sys.IUIComponent";
+        }
+        sys.isIUIComponent = isIUIComponent;
+        function formatRelative(value, total) {
+            if (!value || typeof value == "number") {
+                return value;
+            }
+            let str = value;
+            let index = str.indexOf("%");
+            if (index == -1) {
+                return +str;
+            }
+            let percent = +str.substring(0, index);
+            return percent * 0.01 * total;
+        }
+        /**
+         * 使用 BasicLayout 规则测量目标对象
+         */
+        function measure(target) {
+            if (!target) {
+                return;
+            }
+            let width = 0;
+            let height = 0;
+            let bounds = dou.recyclable(dou2d.Rectangle);
+            let count = target.numChildren;
+            for (let i = 0; i < count; i++) {
+                let layoutElement = (target.getChildAt(i));
+                if (!isIUIComponent(layoutElement) || !layoutElement.includeInLayout) {
+                    continue;
+                }
+                let values = layoutElement.$UIComponent;
+                let hCenter = +values[4 /* horizontalCenter */];
+                let vCenter = +values[5 /* verticalCenter */];
+                let left = +values[0 /* left */];
+                let right = +values[1 /* right */];
+                let top = +values[2 /* top */];
+                let bottom = +values[3 /* bottom */];
+                let extX;
+                let extY;
+                layoutElement.getPreferredBounds(bounds);
+                if (!isNaN(left) && !isNaN(right)) {
+                    extX = left + right;
+                }
+                else if (!isNaN(hCenter)) {
+                    extX = Math.abs(hCenter) * 2;
+                }
+                else if (!isNaN(left) || !isNaN(right)) {
+                    extX = isNaN(left) ? 0 : left;
+                    extX += isNaN(right) ? 0 : right;
+                }
+                else {
+                    extX = bounds.x;
+                }
+                if (!isNaN(top) && !isNaN(bottom)) {
+                    extY = top + bottom;
+                }
+                else if (!isNaN(vCenter)) {
+                    extY = Math.abs(vCenter) * 2;
+                }
+                else if (!isNaN(top) || !isNaN(bottom)) {
+                    extY = isNaN(top) ? 0 : top;
+                    extY += isNaN(bottom) ? 0 : bottom;
+                }
+                else {
+                    extY = bounds.y;
+                }
+                let preferredWidth = bounds.width;
+                let preferredHeight = bounds.height;
+                width = Math.ceil(Math.max(width, extX + preferredWidth));
+                height = Math.ceil(Math.max(height, extY + preferredHeight));
+            }
+            target.setMeasuredSize(width, height);
+        }
+        sys.measure = measure;
+        /**
+         * 使用 BasicLayout 规则布局目标对象
+         */
+        function updateDisplayList(target, unscaledWidth, unscaledHeight) {
+            if (!target) {
+                return;
+            }
+            let count = target.numChildren;
+            let maxX = 0;
+            let maxY = 0;
+            let bounds = dou.recyclable(dou2d.Rectangle);
+            for (let i = 0; i < count; i++) {
+                let layoutElement = (target.getChildAt(i));
+                if (!isIUIComponent(layoutElement) || !layoutElement.includeInLayout) {
+                    continue;
+                }
+                let values = layoutElement.$UIComponent;
+                let hCenter = formatRelative(values[4 /* horizontalCenter */], unscaledWidth * 0.5);
+                let vCenter = formatRelative(values[5 /* verticalCenter */], unscaledHeight * 0.5);
+                let left = formatRelative(values[0 /* left */], unscaledWidth);
+                let right = formatRelative(values[1 /* right */], unscaledWidth);
+                let top = formatRelative(values[2 /* top */], unscaledHeight);
+                let bottom = formatRelative(values[3 /* bottom */], unscaledHeight);
+                let percentWidth = values[6 /* percentWidth */];
+                let percentHeight = values[7 /* percentHeight */];
+                let childWidth = NaN;
+                let childHeight = NaN;
+                if (!isNaN(left) && !isNaN(right)) {
+                    childWidth = unscaledWidth - right - left;
+                }
+                else if (!isNaN(percentWidth)) {
+                    childWidth = Math.round(unscaledWidth * Math.min(percentWidth * 0.01, 1));
+                }
+                if (!isNaN(top) && !isNaN(bottom)) {
+                    childHeight = unscaledHeight - bottom - top;
+                }
+                else if (!isNaN(percentHeight)) {
+                    childHeight = Math.round(unscaledHeight * Math.min(percentHeight * 0.01, 1));
+                }
+                layoutElement.setLayoutBoundsSize(childWidth, childHeight);
+                layoutElement.getLayoutBounds(bounds);
+                let elementWidth = bounds.width;
+                let elementHeight = bounds.height;
+                let childX = NaN;
+                let childY = NaN;
+                if (!isNaN(hCenter)) {
+                    childX = Math.round((unscaledWidth - elementWidth) / 2 + hCenter);
+                }
+                else if (!isNaN(left)) {
+                    childX = left;
+                }
+                else if (!isNaN(right)) {
+                    childX = unscaledWidth - elementWidth - right;
+                }
+                else {
+                    childX = bounds.x;
+                }
+                if (!isNaN(vCenter)) {
+                    childY = Math.round((unscaledHeight - elementHeight) / 2 + vCenter);
+                }
+                else if (!isNaN(top)) {
+                    childY = top;
+                }
+                else if (!isNaN(bottom)) {
+                    childY = unscaledHeight - elementHeight - bottom;
+                }
+                else {
+                    childY = bounds.y;
+                }
+                layoutElement.setLayoutBoundsPosition(childX, childY);
+                maxX = Math.max(maxX, childX + elementWidth);
+                maxY = Math.max(maxY, childY + elementHeight);
+            }
+            bounds.recycle();
+            let point = dou.recyclable(dou2d.Point);
+            return point.set(maxX, maxY);
+        }
+        sys.updateDisplayList = updateDisplayList;
+    })(sys = douUI.sys || (douUI.sys = {}));
+})(douUI || (douUI = {}));
+var douUI;
+(function (douUI) {
     /**
      * 默认的资源加载实现
      * * 可根据需要编写自己的资源加载器
@@ -1447,8 +1675,10 @@ var douUI;
                 2: true,
                 3: null,
                 4: null,
-                5: null,
-                6: false // stateIsDirty
+                5: false,
+                6: null,
+                7: false,
+                8: [] // skinStyle
             };
             this._touchEnabled = true;
         }
@@ -1508,9 +1738,15 @@ var douUI;
             }
             values[3 /* skin */] = value;
             if (value) {
-                value.onApply();
-                this.onSkinAdded();
-                values[6 /* stateIsDirty */] = true;
+                if (this._stage) {
+                    value.onCreateSkin();
+                    value.onApply();
+                    this.onSkinAdded();
+                }
+                else {
+                    values[5 /* skinIsDirty */] = true;
+                }
+                values[7 /* stateIsDirty */] = true;
                 this.invalidateProperties();
             }
         }
@@ -1543,25 +1779,25 @@ var douUI;
          */
         set currentState(value) {
             let values = this.$Component;
-            if (values[5 /* explicitState */] == value) {
+            if (values[6 /* explicitState */] == value) {
                 return;
             }
-            values[5 /* explicitState */] = value;
+            values[6 /* explicitState */] = value;
             this.invalidateState();
         }
         get currentState() {
             let values = this.$Component;
-            return values[5 /* explicitState */] ? values[5 /* explicitState */] : this.getCurrentState();
+            return values[6 /* explicitState */] ? values[6 /* explicitState */] : this.getCurrentState();
         }
         /**
          * 标记状态失效
          */
         invalidateState() {
             let values = this.$Component;
-            if (values[6 /* stateIsDirty */]) {
+            if (values[7 /* stateIsDirty */]) {
                 return;
             }
-            values[6 /* stateIsDirty */] = true;
+            values[7 /* stateIsDirty */] = true;
             this.invalidateProperties();
         }
         getCurrentState() {
@@ -1569,10 +1805,18 @@ var douUI;
         }
         /**
          * 设置皮肤风格
+         * * 仅对当前使用的皮肤有效, 皮肤更换后需要重新调用
          */
         setStyle(name, ...args) {
-            if (this.skin && typeof this.skin[name] == "function") {
-                this.skin[name].call(this.skin, ...args);
+            if (!this.$UIComponent[29 /* initialized */]) {
+                let values = this.$Component;
+                let styleList = values[8 /* skinStyle */];
+                styleList.push([name, args]);
+            }
+            else {
+                if (this.skin && typeof this.skin[name] == "function") {
+                    this.skin[name].call(this.skin, ...args);
+                }
             }
         }
         /**
@@ -1585,6 +1829,11 @@ var douUI;
          */
         onSkinRemoved() {
         }
+        /**
+         * UIComponentImpl 定义的所有变量请不要添加任何初始值, 必须统一在此处初始化
+         */
+        initializeUIValues() {
+        }
         createChildren() {
             let values = this.$Component;
             if (!values[3 /* skin */]) {
@@ -1592,7 +1841,21 @@ var douUI;
                 if (!skinClass) {
                     throw new Error(`没有注册默认的皮肤类: ${this.constructor}`);
                 }
-                this.skin = new skinClass();
+                this.skin = new skinClass(this);
+            }
+            if (values[5 /* skinIsDirty */]) {
+                values[5 /* skinIsDirty */] = false;
+                let skin = this.skin;
+                skin.onCreateSkin();
+                skin.onApply();
+                this.onSkinAdded();
+            }
+            let styleList = values[8 /* skinStyle */];
+            if (styleList.length > 0) {
+                for (let style of styleList) {
+                    this.skin[style[0]].call(this.skin, ...style[1]);
+                }
+                styleList.length = 0;
             }
         }
         childrenCreated() {
@@ -1600,8 +1863,15 @@ var douUI;
         commitProperties() {
             douUI.sys.UIComponentImpl.prototype["commitProperties"].call(this);
             let values = this.$Component;
-            if (values[6 /* stateIsDirty */]) {
-                values[6 /* stateIsDirty */] = false;
+            if (values[5 /* skinIsDirty */]) {
+                values[5 /* skinIsDirty */] = false;
+                let skin = this.skin;
+                skin.onCreateSkin();
+                skin.onApply();
+                this.onSkinAdded();
+            }
+            if (values[7 /* stateIsDirty */]) {
+                values[7 /* stateIsDirty */] = false;
                 if (values[3 /* skin */]) {
                     values[3 /* skin */].setState(this.currentState);
                 }
@@ -2360,6 +2630,11 @@ var douUI;
             this.dispatchEvent(dou.Event.PROPERTY_CHANGE, "text");
             return result;
         }
+        /**
+         * UIComponentImpl 定义的所有变量请不要添加任何初始值, 必须统一在此处初始化
+         */
+        initializeUIValues() {
+        }
         createChildren() {
         }
         childrenCreated() {
@@ -2491,6 +2766,11 @@ var douUI;
                     this._sourceChanged = false;
                 }
             }, this);
+        }
+        /**
+         * UIComponentImpl 定义的所有变量请不要添加任何初始值, 必须统一在此处初始化
+         */
+        initializeUIValues() {
         }
         createChildren() {
             if (this._sourceChanged) {
@@ -2745,6 +3025,11 @@ var douUI;
             }
             return true;
         }
+        /**
+         * UIComponentImpl 定义的所有变量请不要添加任何初始值, 必须统一在此处初始化
+         */
+        initializeUIValues() {
+        }
         createChildren() {
             this.onfocusOut();
         }
@@ -2910,6 +3195,11 @@ var douUI;
             else {
                 bounds.clear();
             }
+        }
+        /**
+         * UIComponentImpl 定义的所有变量请不要添加任何初始值, 必须统一在此处初始化
+         */
+        initializeUIValues() {
         }
         createChildren() {
             if (this._sourceChanged) {
@@ -3595,6 +3885,11 @@ var douUI;
             point.recycle();
             rect.recycle();
             return null;
+        }
+        /**
+         * UIComponentImpl 定义的所有变量请不要添加任何初始值, 必须统一在此处初始化
+         */
+        initializeUIValues() {
         }
         createChildren() {
             if (!this._layout) {
@@ -8671,6 +8966,7 @@ var douUI;
      */
     class SkinBase {
         constructor(target, size) {
+            this._skinCreated = false;
             this._target = target;
             if (size) {
                 this._width = size.width;
@@ -8704,6 +9000,22 @@ var douUI;
          */
         bindToTarget(attributeName, instance) {
             this._target[attributeName] = instance;
+        }
+        onCreateSkin() {
+            if (!this._skinCreated) {
+                this._skinCreated = true;
+                this.createSkin();
+            }
+        }
+        onApply() {
+            if (this._skinCreated) {
+                this.apply();
+            }
+        }
+        onUnload() {
+            if (this._skinCreated) {
+                this.unload();
+            }
         }
         setState(state) {
         }
@@ -8755,234 +9067,6 @@ var douUI;
         }
         Theme.getSkin = getSkin;
     })(Theme = douUI.Theme || (douUI.Theme = {}));
-})(douUI || (douUI = {}));
-var douUI;
-(function (douUI) {
-    var sys;
-    (function (sys) {
-        /**
-         * 自定义类实现 IUIComponent 的步骤:
-         * 1. 在自定义类的构造函数里调用: this.initializeUIValues();
-         * 2. 拷贝 IUIComponent 接口定义的所有内容 (包括注释掉的 protected 函数) 到自定义类, 将所有子类需要覆盖的方法都声明为空方法体
-         * 3. 在定义类结尾的外部调用 implementUIComponent(), 并传入自定义类
-         * 4. 若覆盖了某个 IUIComponent 的方法, 需要手动调用 UIComponentImpl.prototype["方法名"].call(this);
-         * @param descendant 自定义的 IUIComponent 子类
-         * @param base 自定义子类继承的父类
-         */
-        function implementUIComponent(descendant, base, isContainer) {
-            mixin(descendant, douUI.sys.UIComponentImpl);
-            let prototype = descendant.prototype;
-            prototype.$super = base.prototype;
-            if (isContainer) {
-                prototype.$childAdded = function (child, index) {
-                    this.invalidateSize();
-                    this.invalidateDisplayList();
-                };
-                prototype.$childRemoved = function (child, index) {
-                    this.invalidateSize();
-                    this.invalidateDisplayList();
-                };
-            }
-        }
-        sys.implementUIComponent = implementUIComponent;
-        /**
-         * 拷贝模板类的方法体和属性到目标类上
-         * @param target 目标类
-         * @param template 模板类
-         */
-        function mixin(target, template) {
-            for (let property in template) {
-                if (property != "prototype" && template.hasOwnProperty(property)) {
-                    target[property] = template[property];
-                }
-            }
-            let prototype = target.prototype;
-            let protoBase = template.prototype;
-            let keys = Object.keys(protoBase);
-            let length = keys.length;
-            for (let i = 0; i < length; i++) {
-                let key = keys[i];
-                if (key == "__meta__") {
-                    continue;
-                }
-                if (!prototype.hasOwnProperty(key) || isEmptyFunction(prototype, key)) {
-                    let value = Object.getOwnPropertyDescriptor(protoBase, key);
-                    Object.defineProperty(prototype, key, value);
-                }
-            }
-        }
-        sys.mixin = mixin;
-        /**
-         * 检查一个函数的方法体是否为空
-         */
-        function isEmptyFunction(prototype, key) {
-            if (typeof prototype[key] != "function") {
-                return false;
-            }
-            let body = prototype[key].toString();
-            let index = body.indexOf("{");
-            let lastIndex = body.lastIndexOf("}");
-            body = body.substring(index + 1, lastIndex);
-            return body.trim() == "";
-        }
-        /**
-         * 检测指定对象是否实现了 IUIComponent 接口
-         */
-        function isIUIComponent(obj) {
-            return obj.__interface_type__ === "douUI.sys.IUIComponent";
-        }
-        sys.isIUIComponent = isIUIComponent;
-        function formatRelative(value, total) {
-            if (!value || typeof value == "number") {
-                return value;
-            }
-            let str = value;
-            let index = str.indexOf("%");
-            if (index == -1) {
-                return +str;
-            }
-            let percent = +str.substring(0, index);
-            return percent * 0.01 * total;
-        }
-        /**
-         * 使用 BasicLayout 规则测量目标对象
-         */
-        function measure(target) {
-            if (!target) {
-                return;
-            }
-            let width = 0;
-            let height = 0;
-            let bounds = dou.recyclable(dou2d.Rectangle);
-            let count = target.numChildren;
-            for (let i = 0; i < count; i++) {
-                let layoutElement = (target.getChildAt(i));
-                if (!isIUIComponent(layoutElement) || !layoutElement.includeInLayout) {
-                    continue;
-                }
-                let values = layoutElement.$UIComponent;
-                let hCenter = +values[4 /* horizontalCenter */];
-                let vCenter = +values[5 /* verticalCenter */];
-                let left = +values[0 /* left */];
-                let right = +values[1 /* right */];
-                let top = +values[2 /* top */];
-                let bottom = +values[3 /* bottom */];
-                let extX;
-                let extY;
-                layoutElement.getPreferredBounds(bounds);
-                if (!isNaN(left) && !isNaN(right)) {
-                    extX = left + right;
-                }
-                else if (!isNaN(hCenter)) {
-                    extX = Math.abs(hCenter) * 2;
-                }
-                else if (!isNaN(left) || !isNaN(right)) {
-                    extX = isNaN(left) ? 0 : left;
-                    extX += isNaN(right) ? 0 : right;
-                }
-                else {
-                    extX = bounds.x;
-                }
-                if (!isNaN(top) && !isNaN(bottom)) {
-                    extY = top + bottom;
-                }
-                else if (!isNaN(vCenter)) {
-                    extY = Math.abs(vCenter) * 2;
-                }
-                else if (!isNaN(top) || !isNaN(bottom)) {
-                    extY = isNaN(top) ? 0 : top;
-                    extY += isNaN(bottom) ? 0 : bottom;
-                }
-                else {
-                    extY = bounds.y;
-                }
-                let preferredWidth = bounds.width;
-                let preferredHeight = bounds.height;
-                width = Math.ceil(Math.max(width, extX + preferredWidth));
-                height = Math.ceil(Math.max(height, extY + preferredHeight));
-            }
-            target.setMeasuredSize(width, height);
-        }
-        sys.measure = measure;
-        /**
-         * 使用 BasicLayout 规则布局目标对象
-         */
-        function updateDisplayList(target, unscaledWidth, unscaledHeight) {
-            if (!target) {
-                return;
-            }
-            let count = target.numChildren;
-            let maxX = 0;
-            let maxY = 0;
-            let bounds = dou.recyclable(dou2d.Rectangle);
-            for (let i = 0; i < count; i++) {
-                let layoutElement = (target.getChildAt(i));
-                if (!isIUIComponent(layoutElement) || !layoutElement.includeInLayout) {
-                    continue;
-                }
-                let values = layoutElement.$UIComponent;
-                let hCenter = formatRelative(values[4 /* horizontalCenter */], unscaledWidth * 0.5);
-                let vCenter = formatRelative(values[5 /* verticalCenter */], unscaledHeight * 0.5);
-                let left = formatRelative(values[0 /* left */], unscaledWidth);
-                let right = formatRelative(values[1 /* right */], unscaledWidth);
-                let top = formatRelative(values[2 /* top */], unscaledHeight);
-                let bottom = formatRelative(values[3 /* bottom */], unscaledHeight);
-                let percentWidth = values[6 /* percentWidth */];
-                let percentHeight = values[7 /* percentHeight */];
-                let childWidth = NaN;
-                let childHeight = NaN;
-                if (!isNaN(left) && !isNaN(right)) {
-                    childWidth = unscaledWidth - right - left;
-                }
-                else if (!isNaN(percentWidth)) {
-                    childWidth = Math.round(unscaledWidth * Math.min(percentWidth * 0.01, 1));
-                }
-                if (!isNaN(top) && !isNaN(bottom)) {
-                    childHeight = unscaledHeight - bottom - top;
-                }
-                else if (!isNaN(percentHeight)) {
-                    childHeight = Math.round(unscaledHeight * Math.min(percentHeight * 0.01, 1));
-                }
-                layoutElement.setLayoutBoundsSize(childWidth, childHeight);
-                layoutElement.getLayoutBounds(bounds);
-                let elementWidth = bounds.width;
-                let elementHeight = bounds.height;
-                let childX = NaN;
-                let childY = NaN;
-                if (!isNaN(hCenter)) {
-                    childX = Math.round((unscaledWidth - elementWidth) / 2 + hCenter);
-                }
-                else if (!isNaN(left)) {
-                    childX = left;
-                }
-                else if (!isNaN(right)) {
-                    childX = unscaledWidth - elementWidth - right;
-                }
-                else {
-                    childX = bounds.x;
-                }
-                if (!isNaN(vCenter)) {
-                    childY = Math.round((unscaledHeight - elementHeight) / 2 + vCenter);
-                }
-                else if (!isNaN(top)) {
-                    childY = top;
-                }
-                else if (!isNaN(bottom)) {
-                    childY = unscaledHeight - elementHeight - bottom;
-                }
-                else {
-                    childY = bounds.y;
-                }
-                layoutElement.setLayoutBoundsPosition(childX, childY);
-                maxX = Math.max(maxX, childX + elementWidth);
-                maxY = Math.max(maxY, childY + elementHeight);
-            }
-            bounds.recycle();
-            let point = dou.recyclable(dou2d.Point);
-            return point.set(maxX, maxY);
-        }
-        sys.updateDisplayList = updateDisplayList;
-    })(sys = douUI.sys || (douUI.sys = {}));
 })(douUI || (douUI = {}));
 var douUI;
 (function (douUI) {

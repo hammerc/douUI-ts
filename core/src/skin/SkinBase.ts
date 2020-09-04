@@ -4,7 +4,7 @@ namespace douUI {
      * @author wizardc
      */
     export abstract class SkinBase implements ISkin {
-        protected _target: sys.IUIComponent;
+        protected _target: Component;
 
         protected _width: number;
         protected _minWidth: number;
@@ -13,7 +13,9 @@ namespace douUI {
         protected _minHeight: number;
         protected _maxHeight: number;
 
-        public constructor(target: sys.IUIComponent, size?: { width?: number, minWidth?: number, maxWidth?: number, height?: number, minHeight?: number, maxHeight?: number }) {
+        protected _skinCreated: boolean = false;
+
+        public constructor(target: Component, size?: { width?: number, minWidth?: number, maxWidth?: number, height?: number, minHeight?: number, maxHeight?: number }) {
             this._target = target;
             if (size) {
                 this._width = size.width;
@@ -56,9 +58,30 @@ namespace douUI {
             this._target[attributeName] = instance;
         }
 
-        public abstract onApply(): void;
+        public onCreateSkin(): void {
+            if (!this._skinCreated) {
+                this._skinCreated = true;
+                this.createSkin();
+            }
+        }
 
-        public abstract onUnload(): void;
+        protected abstract createSkin(): void;
+
+        public onApply(): void {
+            if (this._skinCreated) {
+                this.apply();
+            }
+        }
+
+        protected abstract apply(): void;
+
+        public onUnload(): void {
+            if (this._skinCreated) {
+                this.unload();
+            }
+        }
+
+        protected abstract unload(): void;
 
         public setState(state: string): void {
         }
