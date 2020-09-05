@@ -331,7 +331,7 @@ namespace douUI {
         }
 
         private onRemoveListeners(): void {
-            let stage = dou2d.sys.stage;
+            let stage = dou2d.$2d.stage;
             this.off(dou2d.TouchEvent.TOUCH_MOVE, this.onTouchMove, this);
             stage.off(dou2d.TouchEvent.TOUCH_END, this.onTouchEnd, this);
             stage.off(dou2d.TouchEvent.TOUCH_MOVE, this.onTouchMove, this);

@@ -9,6 +9,8 @@ namespace skin {
         private _upSource: string = "button_up_png";
         private _downSource: string = "button_down_png";
 
+        private _scale9Grid: Dou.Rectangle = new Dou.Rectangle(3, 3, 10, 10);
+
         private _btnLabel: string = "Button";
 
         public constructor(target: Dou.Component) {
@@ -20,10 +22,12 @@ namespace skin {
             bg.percentWidth = 100;
             bg.percentHeight = 100;
             let label = this._label = new Dou.Label();
-            label.verticalCenter = label.horizontalCenter = 0;
+            label.top = label.bottom = label.left = label.right = 5;
             label.fontFamily = "SimHei";
             label.size = 25;
             label.textColor = 0xffffff;
+            label.textAlign = Dou.HorizontalAlign.center;
+            label.verticalAlign = Dou.VerticalAlign.middle;
         }
 
         protected apply(): void {
@@ -49,6 +53,7 @@ namespace skin {
                 case "disable":
                     break;
             }
+            this._bg.scale9Grid = this._scale9Grid;
             this._label.text = this._btnLabel;
             if (state == "disable") {
                 this._target.filters = [];
@@ -65,6 +70,11 @@ namespace skin {
             if (downSource) {
                 this._downSource = downSource;
             }
+            this._target.invalidateState();
+        }
+
+        public scale9Grid(rect: Dou.Rectangle): void {
+            this._scale9Grid = rect;
             this._target.invalidateState();
         }
 

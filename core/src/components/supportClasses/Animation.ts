@@ -56,7 +56,7 @@ namespace douUI.sys {
             this._currentValue = 0;
             this._runningTime = 0;
             this.update(0);
-            dou2d.sys.ticker.startTick(this.update, this);
+            dou2d.$2d.ticker.startTick(this.update, this);
         }
 
         private update(passedTime: number): boolean {
@@ -89,7 +89,7 @@ namespace douUI.sys {
         public stop(): void {
             this._isPlaying = false;
             this._runningTime = 0;
-            dou2d.sys.ticker.stopTick(this.update, this);
+            dou2d.$2d.ticker.stopTick(this.update, this);
         }
     }
 }

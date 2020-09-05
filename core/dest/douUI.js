@@ -543,7 +543,7 @@ var douUI;
             attachListeners() {
                 this._eventDisplay.on(dou2d.Event2D.ENTER_FRAME, this.doPhasedInstantiationCallBack, this);
                 this._eventDisplay.on(dou2d.Event2D.RENDER, this.doPhasedInstantiationCallBack, this);
-                dou2d.sys.stage.invalidate();
+                dou2d.$2d.stage.invalidate();
                 this._listenersAttached = true;
             }
             /**
@@ -1983,7 +1983,7 @@ var douUI;
                 this._currentValue = 0;
                 this._runningTime = 0;
                 this.update(0);
-                dou2d.sys.ticker.startTick(this.update, this);
+                dou2d.$2d.ticker.startTick(this.update, this);
             }
             update(passedTime) {
                 this._runningTime += passedTime;
@@ -2014,7 +2014,7 @@ var douUI;
             stop() {
                 this._isPlaying = false;
                 this._runningTime = 0;
-                dou2d.sys.ticker.stopTick(this.update, this);
+                dou2d.$2d.ticker.stopTick(this.update, this);
             }
         }
         sys.Animation = Animation;
@@ -2432,7 +2432,7 @@ var douUI;
                 this._previousVelocity.length = 0;
                 this._previousPosition = this._currentPosition = touchPoint;
                 this._offsetPoint = touchPoint;
-                dou2d.sys.ticker.startTick(this.onTick, this);
+                dou2d.$2d.ticker.startTick(this.onTick, this);
             }
             onTick(passedTime) {
                 let previousVelocity = this._previousVelocity;
@@ -2477,7 +2477,7 @@ var douUI;
              * 停止记录位移变化, 并计算出目标值和继续缓动的时间
              */
             finish(currentScrollPos, maxScrollPos) {
-                dou2d.sys.ticker.stopTick(this.onTick, this);
+                dou2d.$2d.ticker.stopTick(this.onTick, this);
                 this._started = false;
                 let sum = this._velocity * CURRENT_VELOCITY_WEIGHT;
                 let previousVelocityX = this._previousVelocity;
@@ -2556,7 +2556,7 @@ var douUI;
             stop() {
                 this._started = false;
                 this._animation.stop();
-                dou2d.sys.ticker.stopTick(this.onTick, this);
+                dou2d.$2d.ticker.stopTick(this.onTick, this);
             }
         }
         sys.TouchScroll = TouchScroll;
@@ -6067,7 +6067,7 @@ var douUI;
             }
         }
         onRemoveListeners() {
-            let stage = dou2d.sys.stage;
+            let stage = dou2d.$2d.stage;
             this.off(dou2d.TouchEvent.TOUCH_MOVE, this.onTouchMove, this);
             stage.off(dou2d.TouchEvent.TOUCH_END, this.onTouchEnd, this);
             stage.off(dou2d.TouchEvent.TOUCH_MOVE, this.onTouchMove, this);

@@ -11,7 +11,14 @@ var examples;
         }
         onAdded(event) {
             let button = new Dou.Button();
-            button.setStyle("label", "开始游戏111111");
+            button.setStyle("label", "开始游戏");
+            this.addChild(button);
+            button = new Dou.Button();
+            button.top = 0;
+            button.right = 0;
+            button.width = 200;
+            button.height = 50;
+            button.setStyle("label", "再续前缘");
             this.addChild(button);
         }
     }

@@ -68,7 +68,7 @@ namespace douUI.sys {
             this._previousVelocity.length = 0;
             this._previousPosition = this._currentPosition = touchPoint;
             this._offsetPoint = touchPoint;
-            dou2d.sys.ticker.startTick(this.onTick, this);
+            dou2d.$2d.ticker.startTick(this.onTick, this);
         }
 
         private onTick(passedTime: number): boolean {
@@ -116,7 +116,7 @@ namespace douUI.sys {
          * 停止记录位移变化, 并计算出目标值和继续缓动的时间
          */
         public finish(currentScrollPos: number, maxScrollPos: number): void {
-            dou2d.sys.ticker.stopTick(this.onTick, this);
+            dou2d.$2d.ticker.stopTick(this.onTick, this);
             this._started = false;
             let sum = this._velocity * CURRENT_VELOCITY_WEIGHT;
             let previousVelocityX = this._previousVelocity;
@@ -198,7 +198,7 @@ namespace douUI.sys {
         public stop(): void {
             this._started = false;
             this._animation.stop();
-            dou2d.sys.ticker.stopTick(this.onTick, this);
+            dou2d.$2d.ticker.stopTick(this.onTick, this);
         }
     }
 

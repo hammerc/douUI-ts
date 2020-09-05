@@ -126,7 +126,7 @@ namespace douUI.sys {
         private attachListeners(): void {
             this._eventDisplay.on(dou2d.Event2D.ENTER_FRAME, this.doPhasedInstantiationCallBack, this);
             this._eventDisplay.on(dou2d.Event2D.RENDER, this.doPhasedInstantiationCallBack, this);
-            dou2d.sys.stage.invalidate();
+            dou2d.$2d.stage.invalidate();
             this._listenersAttached = true;
         }
 
