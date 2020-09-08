@@ -864,7 +864,7 @@ var douUI;
                         this.map.clear();
                     }
                     else {
-                        this.map.set(client, false);
+                        this.map.delete(client);
                     }
                 }
                 return client;
@@ -878,7 +878,7 @@ var douUI;
                         this.map.clear();
                     }
                     else {
-                        this.map.set(client, false);
+                        this.map.delete(client);
                     }
                 }
             }
@@ -2233,8 +2233,8 @@ var douUI;
 (function (douUI) {
     /**
      * 滑块基类
-     * * 皮肤必须子项: "track", "trackHighlight", "thumb"
-     * * 皮肤可选子项: 无
+     * * 皮肤必须子项: "track", "thumb"
+     * * 皮肤可选子项: "trackHighlight"
      * @author wizardc
      */
     class SliderBase extends douUI.Range {
@@ -2280,9 +2280,11 @@ var douUI;
         onSkinAdded() {
             this.thumb.on(dou2d.TouchEvent.TOUCH_BEGIN, this.onThumbTouchBegin, this);
             this.track.on(dou2d.TouchEvent.TOUCH_BEGIN, this.onTrackTouchBegin, this);
-            this.trackHighlight.touchEnabled = false;
-            if (this.trackHighlight instanceof dou2d.DisplayObjectContainer) {
-                this.trackHighlight.touchChildren = false;
+            if (this.trackHighlight) {
+                this.trackHighlight.touchEnabled = false;
+                if (this.trackHighlight instanceof dou2d.DisplayObjectContainer) {
+                    this.trackHighlight.touchChildren = false;
+                }
             }
         }
         onSkinRemoved() {
@@ -4734,7 +4736,7 @@ var douUI;
                 return;
             }
             let values = this.$ListBase;
-            if (event.$isDefaultPrevented) {
+            if (event.$isDefaultPrevented()) {
                 return;
             }
             values[8 /* touchCancle */] = false;
@@ -4835,8 +4837,8 @@ var douUI;
 (function (douUI) {
     /**
      * 水平滑块
-     * * 皮肤必须子项: "track", "trackHighlight", "thumb"
-     * * 皮肤可选子项: 无
+     * * 皮肤必须子项: "track", "thumb"
+     * * 皮肤可选子项: "trackHighlight"
      * @author wizardc
      */
     class HSlider extends douUI.SliderBase {
@@ -6747,8 +6749,8 @@ var douUI;
 (function (douUI) {
     /**
      * 垂直滑块
-     * * 皮肤必须子项: "track", "trackHighlight", "thumb"
-     * * 皮肤可选子项: 无
+     * * 皮肤必须子项: "track", "thumb"
+     * * 皮肤可选子项: "trackHighlight"
      * @author wizardc
      */
     class VSlider extends douUI.SliderBase {

@@ -2,6 +2,7 @@ var skin;
 (function (skin) {
     /**
      * 通用按钮皮肤
+     * @author wizardc
      */
     class ButtonSkin extends Dou.SkinBase {
         constructor(target) {
@@ -30,8 +31,8 @@ var skin;
         }
         unload() {
             let target = this._target;
-            target.addChild(this._bg);
-            target.addChild(this._label);
+            target.removeChild(this._bg);
+            target.removeChild(this._label);
         }
         setState(state) {
             switch (state) {
@@ -47,7 +48,7 @@ var skin;
             this._bg.scale9Grid = this._scale9Grid;
             this._label.text = this._btnLabel;
             if (state == "disable") {
-                this._target.filters = [];
+                this._target.filters = [skin.FilterUtil.darkFilter];
             }
             else {
                 this._target.filters = [];

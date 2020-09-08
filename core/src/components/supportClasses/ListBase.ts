@@ -303,7 +303,7 @@ namespace douUI {
                 return;
             }
             let values = this.$ListBase;
-            if (event.$isDefaultPrevented) {
+            if (event.$isDefaultPrevented()) {
                 return;
             }
             values[sys.ListBaseKeys.touchCancle] = false;

@@ -1,8 +1,8 @@
 namespace douUI {
     /**
      * 滑块基类
-     * * 皮肤必须子项: "track", "trackHighlight", "thumb"
-     * * 皮肤可选子项: 无
+     * * 皮肤必须子项: "track", "thumb"
+     * * 皮肤可选子项: "trackHighlight"
      * @author wizardc
      */
     export abstract class SliderBase extends Range {
@@ -68,9 +68,11 @@ namespace douUI {
         protected onSkinAdded(): void {
             this.thumb.on(dou2d.TouchEvent.TOUCH_BEGIN, this.onThumbTouchBegin, this);
             this.track.on(dou2d.TouchEvent.TOUCH_BEGIN, this.onTrackTouchBegin, this);
-            this.trackHighlight.touchEnabled = false;
-            if (this.trackHighlight instanceof dou2d.DisplayObjectContainer) {
-                this.trackHighlight.touchChildren = false;
+            if (this.trackHighlight) {
+                this.trackHighlight.touchEnabled = false;
+                if (this.trackHighlight instanceof dou2d.DisplayObjectContainer) {
+                    this.trackHighlight.touchChildren = false;
+                }
             }
         }
 

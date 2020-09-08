@@ -469,7 +469,7 @@ namespace douUI.sys {
                     this.map.clear();
                 }
                 else {
-                    this.map.set(client, false);
+                    this.map.delete(client);
                 }
             }
             return client;
@@ -484,7 +484,7 @@ namespace douUI.sys {
                     this.map.clear();
                 }
                 else {
-                    this.map.set(client, false);
+                    this.map.delete(client);
                 }
             }
         }

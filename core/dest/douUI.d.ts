@@ -849,8 +849,8 @@ declare namespace douUI {
 declare namespace douUI {
     /**
      * 滑块基类
-     * * 皮肤必须子项: "track", "trackHighlight", "thumb"
-     * * 皮肤可选子项: 无
+     * * 皮肤必须子项: "track", "thumb"
+     * * 皮肤可选子项: "trackHighlight"
      * @author wizardc
      */
     abstract class SliderBase extends Range {
@@ -1535,8 +1535,8 @@ declare namespace douUI {
 declare namespace douUI {
     /**
      * 水平滑块
-     * * 皮肤必须子项: "track", "trackHighlight", "thumb"
-     * * 皮肤可选子项: 无
+     * * 皮肤必须子项: "track", "thumb"
+     * * 皮肤可选子项: "trackHighlight"
      * @author wizardc
      */
     class HSlider extends SliderBase {
@@ -2005,8 +2005,8 @@ declare namespace douUI {
 declare namespace douUI {
     /**
      * 垂直滑块
-     * * 皮肤必须子项: "track", "trackHighlight", "thumb"
-     * * 皮肤可选子项: 无
+     * * 皮肤必须子项: "track", "thumb"
+     * * 皮肤可选子项: "trackHighlight"
      * @author wizardc
      */
     class VSlider extends SliderBase {

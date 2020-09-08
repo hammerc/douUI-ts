@@ -1,8 +1,8 @@
 namespace douUI {
     /**
      * 垂直滑块
-     * * 皮肤必须子项: "track", "trackHighlight", "thumb"
-     * * 皮肤可选子项: 无
+     * * 皮肤必须子项: "track", "thumb"
+     * * 皮肤可选子项: "trackHighlight"
      * @author wizardc
      */
     export class VSlider extends SliderBase {

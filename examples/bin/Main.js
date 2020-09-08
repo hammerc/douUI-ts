@@ -2,7 +2,19 @@ function loadJS(url) {
     document.writeln(`<script src="${url}"></script>`);
 }
 function loadAllJS() {
+    loadJS("bin/utils/FilterUtil.js");
     loadJS("bin/skin/ButtonSkin.js");
+    loadJS("bin/skin/CheckBoxSkin.js");
+    loadJS("bin/skin/RadioButtonSkin.js");
+    loadJS("bin/skin/ToggleButtonSkin.js");
+    loadJS("bin/skin/ProgressBarSkin.js");
+    loadJS("bin/skin/HSliderSkin.js");
+    loadJS("bin/skin/VSliderSkin.js");
+    loadJS("bin/skin/HScrollBarSkin.js");
+    loadJS("bin/skin/VScrollBarSkin.js");
+    loadJS("bin/skin/ScrollerSkin.js");
+    loadJS("bin/item/SimpleItem.js");
+    loadJS("bin/skin/ItemRendererSkin.js");
     loadJS("bin/UIApp.js");
 }
 function loadJSAsync(src, callback) {
@@ -35,5 +47,6 @@ class Main {
                 return (window.devicePixelRatio || 1) / backingStore;
             }
         });
+        new Dou.StatPanel();
     }
 }
